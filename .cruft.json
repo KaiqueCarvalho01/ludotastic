@@ -1,0 +1,28 @@
+{
+  "template": "https://github.com/MicaelJarniac/crustypy",
+  "commit": "65a9c2e060dd71527883ab57f107859dcb5afb5a",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Micael Jarniac",
+      "email": "micael@jarniac.dev",
+      "github_username": "MicaelJarniac",
+      "year": "2026",
+      "project_name": "Ludotastic",
+      "project_slug": "ludotastic",
+      "project_distribution_name": "ludotastic",
+      "project_short_description": "Where humans and AI come to play.",
+      "version": "0.0.0",
+      "main_branch": "main",
+      "shields_url": "https://img.shields.io",
+      "discord_invite": "Ye9yJtZQuN",
+      "report_method": "micael@jarniac.dev",
+      "__github_path": "MicaelJarniac/ludotastic",
+      "__github_url": "https://github.com/MicaelJarniac/ludotastic",
+      "__readthedocs_name": "ludotastic",
+      "_template": "https://github.com/MicaelJarniac/crustypy",
+      "_commit": "65a9c2e060dd71527883ab57f107859dcb5afb5a"
+    }
+  },
+  "directory": null
+}
