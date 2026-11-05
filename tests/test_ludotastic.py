@@ -1,12 +1,16 @@
 """Testing for ludotastic."""
 
+from typing import TYPE_CHECKING
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 from inline_snapshot import snapshot
-from pytest_benchmark.fixture import BenchmarkFixture  # type: ignore[import]
 
 from ludotastic import make_greeting
+
+if TYPE_CHECKING:
+    from pytest_benchmark.fixture import BenchmarkFixture
 
 
 def test_make_greeting_benchmark(benchmark: BenchmarkFixture) -> None:
