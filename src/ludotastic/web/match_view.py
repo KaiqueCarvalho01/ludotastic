@@ -1,7 +1,12 @@
 """The page that shows a match being played."""
 
+__all__: tuple[str, ...] = (
+    "generic_renderer",
+    "match_view",
+)
+
 import json
-from typing import Any, override
+from typing import Any, Final, override
 
 from nicegui import ui
 from pydantic import BaseModel
@@ -11,8 +16,6 @@ from ludotastic.engine.match import Match, MatchStatus, MoveRecord
 from ludotastic.engine.players import HumanPlayer
 from ludotastic.engine.render import RenderContext
 from ludotastic.engine.usage import Usage, format_cost, format_tokens
-
-__all__ = ["generic_renderer", "match_view"]
 
 
 class _Watcher(ui.timer):
@@ -28,7 +31,7 @@ class _Watcher(ui.timer):
         super()._handle_delete()
 
 
-STATUS_COLORS = {
+STATUS_COLORS: Final = {
     MatchStatus.PENDING: "grey",
     MatchStatus.RUNNING: "primary",
     MatchStatus.FINISHED: "positive",

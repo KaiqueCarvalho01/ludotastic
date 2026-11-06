@@ -1,5 +1,15 @@
 """Running matches for the UI, the API and the CLI."""
 
+__all__: tuple[str, ...] = (
+    "AISpec",
+    "BotSpec",
+    "HumanSpec",
+    "MatchService",
+    "PlayerSpec",
+    "bot_names",
+    "replay",
+)
+
 from collections.abc import Sequence
 from typing import Annotated, Any, Literal, override
 
@@ -19,16 +29,6 @@ from ludotastic.engine.players import (
 from ludotastic.engine.registry import GameRegistry, registry
 from ludotastic.settings import Settings, get_settings
 from ludotastic.storage import MatchRecord, Store
-
-__all__ = [
-    "AISpec",
-    "BotSpec",
-    "HumanSpec",
-    "MatchService",
-    "PlayerSpec",
-    "bot_names",
-    "replay",
-]
 
 
 class HumanSpec(BaseModel):

@@ -1,6 +1,12 @@
 """Model adapters Ludotastic adds on top of Pydantic AI."""
 
-from typing import ClassVar, override
+__all__: tuple[str, ...] = (
+    "IMAGES_HEADER",
+    "TypeSafeImageModel",
+    "resolve_model",
+)
+
+from typing import ClassVar, Final, override
 
 from pydantic import JsonValue
 from pydantic_ai.models import Model, infer_model
@@ -12,9 +18,7 @@ from pydantic_ai.models.decision import (
 from pydantic_ai.models.typesafe import TypeSafeModel
 from typesafe_sdk import Image
 
-__all__ = ["IMAGES_HEADER", "TypeSafeImageModel", "resolve_model"]
-
-IMAGES_HEADER = "TypeSafe-Danger-Zone-Images"
+IMAGES_HEADER: Final = "TypeSafe-Danger-Zone-Images"
 """The header TypeSafe needs on every request that carries an image."""
 
 

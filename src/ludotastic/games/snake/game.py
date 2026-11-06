@@ -1,10 +1,18 @@
 """Snake rules."""
 
+__all__: tuple[str, ...] = (
+    "Direction",
+    "GreedyBot",
+    "Snake",
+    "SnakeState",
+    "Turn",
+)
+
 import random
 from collections import deque
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Final, override
 
 from pydantic import BaseModel, ConfigDict
 
@@ -22,12 +30,10 @@ from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
 if TYPE_CHECKING:
     from ludotastic.engine.render import Renderer
 
-__all__ = ["Direction", "GreedyBot", "Snake", "SnakeState", "Turn"]
-
-WIDTH = 12
-HEIGHT = 12
-START_LENGTH = 3
-MAX_IDLE = 6 * WIDTH * HEIGHT
+WIDTH: Final = 12
+HEIGHT: Final = 12
+START_LENGTH: Final = 3
+MAX_IDLE: Final = 6 * WIDTH * HEIGHT
 """Ticks without eating after which the game ends, so a looping snake stops."""
 
 type Cell = tuple[int, int]
@@ -63,13 +69,13 @@ class Direction(StrEnum):
         return _OPPOSITES[self]
 
 
-_DELTAS: dict[Direction, Cell] = {
+_DELTAS: Final[dict[Direction, Cell]] = {
     Direction.UP: (0, -1),
     Direction.DOWN: (0, 1),
     Direction.LEFT: (-1, 0),
     Direction.RIGHT: (1, 0),
 }
-_OPPOSITES = {
+_OPPOSITES: Final = {
     Direction.UP: Direction.DOWN,
     Direction.DOWN: Direction.UP,
     Direction.LEFT: Direction.RIGHT,
@@ -207,7 +213,7 @@ def render_grid(state: SnakeState) -> str:
     return "\n".join(rows)
 
 
-PIXELS = 40
+PIXELS: Final = 40
 """Side of one cell in the board picture."""
 
 

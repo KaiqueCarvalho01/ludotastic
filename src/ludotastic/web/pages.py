@@ -1,8 +1,10 @@
 """The NiceGUI playground."""
 
+__all__: tuple[str, ...] = ("build_root",)
+
 from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import Any, Final
 
 from nicegui import ui
 
@@ -19,9 +21,12 @@ from ludotastic.service import (
 )
 from ludotastic.web.match_view import match_view
 
-__all__ = ["build_root"]
-
-NAV = (("Games", "/"), ("Live", "/live"), ("History", "/history"), ("Stats", "/stats"))
+NAV: Final = (
+    ("Games", "/"),
+    ("Live", "/live"),
+    ("History", "/history"),
+    ("Stats", "/stats"),
+)
 
 
 def _header(service: MatchService) -> None:

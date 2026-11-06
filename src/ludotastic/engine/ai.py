@@ -1,5 +1,7 @@
 """AI players, powered by Pydantic AI."""
 
+__all__: tuple[str, ...] = ("AIPlayer",)
+
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast, override
@@ -27,8 +29,6 @@ from ludotastic.engine.usage import Usage
 
 if TYPE_CHECKING:
     from pydantic_ai.settings import ModelSettings
-
-__all__ = ["AIPlayer"]
 
 
 @dataclass(frozen=True, kw_only=True)

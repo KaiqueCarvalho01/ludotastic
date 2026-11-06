@@ -1,5 +1,7 @@
 """Tic-Tac-Toe rules and bots."""
 
+__all__: tuple[str, ...] = ()
+
 import random
 
 import pytest

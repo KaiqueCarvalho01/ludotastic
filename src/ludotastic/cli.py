@@ -1,5 +1,7 @@
 """The `ludotastic` command."""
 
+__all__: tuple[str, ...] = ("app",)
+
 import asyncio
 from typing import Annotated, Any
 
@@ -12,8 +14,6 @@ from ludotastic.engine.registry import registry
 from ludotastic.engine.usage import Usage, format_cost, format_tokens
 from ludotastic.service import AISpec, BotSpec, MatchService, bot_names
 from ludotastic.settings import get_settings
-
-__all__ = ["app"]
 
 app = typer.Typer(
     name="ludotastic",

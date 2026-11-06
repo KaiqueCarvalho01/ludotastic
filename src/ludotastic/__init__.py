@@ -1,6 +1,6 @@
 """Where humans and AI come to play."""
 
-__all__ = [
+__all__: tuple[str, ...] = (
     "ENTRY_POINT_GROUP",
     "AIPlayer",
     "ActionMode",
@@ -25,7 +25,7 @@ __all__ = [
     "View",
     "get_settings",
     "registry",
-]
+)
 
 from .engine import (
     ENTRY_POINT_GROUP,

@@ -1,5 +1,9 @@
 """Tic-Tac-Toe in NiceGUI."""
 
+__all__: tuple[str, ...] = ("render",)
+
+from typing import Final
+
 from nicegui import ui
 
 from ludotastic.engine.render import RenderContext
@@ -11,13 +15,11 @@ from ludotastic.games.tictactoe.game import (
     winner,
 )
 
-__all__ = ["render"]
-
-COLORS = {"X": "text-blue-500", "O": "text-rose-500"}
+COLORS: Final = {"X": "text-blue-500", "O": "text-rose-500"}
 # Quasar fades disabled buttons; a played cell should stay as crisp as any other.
-CRISP = "!opacity-100 disabled:!cursor-default"
+CRISP: Final = "!opacity-100 disabled:!cursor-default"
 # Quasar sizes buttons by their content; force square cells instead.
-CELL_SIZE = "!p-0 !w-24 !h-24 !min-h-0 sm:!w-28 sm:!h-28"
+CELL_SIZE: Final = "!p-0 !w-24 !h-24 !min-h-0 sm:!w-28 sm:!h-28"
 
 
 def _winning_cells(state: TicTacToeState) -> set[int]:

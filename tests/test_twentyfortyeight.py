@@ -1,7 +1,10 @@
 """2048 rules, bots and UI."""
 
+__all__: tuple[str, ...] = ()
+
 import asyncio
 import random
+from typing import Final
 
 import pytest
 from inline_snapshot import snapshot
@@ -20,8 +23,8 @@ from ludotastic.games.twentyfortyeight.game import Board, in_corner, slide, spaw
 from ludotastic.service import HumanSpec, MatchService
 
 UP, DOWN, LEFT, RIGHT = (Slide(direction=d) for d in Direction)
-KEYS = {d: f"Arrow{d.title()}" for d in Direction}
-GAME = TwentyFortyEight()
+KEYS: Final = {d: f"Arrow{d.title()}" for d in Direction}
+GAME: Final = TwentyFortyEight()
 
 
 def board(*rows: str) -> Board:

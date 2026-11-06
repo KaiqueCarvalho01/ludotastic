@@ -1,5 +1,7 @@
 """The match service, storage and settings."""
 
+__all__: tuple[str, ...] = ()
+
 import asyncio
 
 import pytest

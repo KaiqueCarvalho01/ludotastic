@@ -1,12 +1,12 @@
 """2048: slide numbered tiles; equal tiles merge."""
 
-__all__ = [
+__all__: tuple[str, ...] = (
     "Direction",
     "GreedyBot",
     "Slide",
     "TwentyFortyEight",
     "TwentyFortyEightState",
-]
+)
 
 from .game import (
     Direction,

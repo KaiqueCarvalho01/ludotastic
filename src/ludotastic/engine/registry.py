@@ -1,16 +1,20 @@
 """Discovering games through Python entry points."""
 
+__all__: tuple[str, ...] = (
+    "ENTRY_POINT_GROUP",
+    "GameRegistry",
+    "registry",
+)
+
 from collections.abc import Iterator, Mapping
 from importlib.metadata import EntryPoint, entry_points
-from typing import Any, override
+from typing import Any, Final, override
 
 from loguru import logger
 
 from ludotastic.engine.game import Game
 
-__all__ = ["ENTRY_POINT_GROUP", "GameRegistry", "registry"]
-
-ENTRY_POINT_GROUP = "ludotastic.games"
+ENTRY_POINT_GROUP: Final = "ludotastic.games"
 """The entry-point group games register under.
 
 A package makes a game available by declaring, in its `pyproject.toml`:

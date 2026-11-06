@@ -1,7 +1,10 @@
 """Snake rules, bots and UI."""
 
+__all__: tuple[str, ...] = ()
+
 import asyncio
 import random
+from typing import Final
 
 import pytest
 from inline_snapshot import snapshot
@@ -14,7 +17,7 @@ from ludotastic.games.snake.game import MAX_IDLE, blocked_after, render_grid
 from ludotastic.service import HumanSpec, MatchService
 
 UP, DOWN, LEFT, RIGHT = (Turn(direction=d) for d in Direction)
-GAME = Snake()
+GAME: Final = Snake()
 
 
 def state(

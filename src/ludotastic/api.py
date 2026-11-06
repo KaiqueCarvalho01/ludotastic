@@ -1,5 +1,7 @@
 """The REST API."""
 
+__all__: tuple[str, ...] = ("create_router",)
+
 from typing import Annotated, Any, cast
 
 from annotated_types import MinLen
@@ -10,8 +12,6 @@ from ludotastic.engine.game import Game, GameInfo
 from ludotastic.engine.match import Match, MatchStatus, MoveRecord, SeatInfo
 from ludotastic.service import MatchService, PlayerSpec, bot_names
 from ludotastic.storage import MatchRecord, PlayerStats
-
-__all__ = ["create_router"]
 
 
 class GameDetails(BaseModel):

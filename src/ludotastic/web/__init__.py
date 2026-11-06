@@ -1,5 +1,10 @@
 """The web app: the NiceGUI playground and the REST API, served together."""
 
+__all__: tuple[str, ...] = (
+    "build_root",
+    "create_app",
+)
+
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
@@ -13,8 +18,6 @@ from ludotastic.web.pages import build_root
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
-
-__all__ = ["build_root", "create_app"]
 
 
 def create_app(service: MatchService | None = None) -> FastAPI:

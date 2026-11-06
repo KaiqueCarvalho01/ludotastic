@@ -1,9 +1,17 @@
 """Tic-Tac-Toe rules."""
 
+__all__: tuple[str, ...] = (
+    "Mark",
+    "MinimaxBot",
+    "Place",
+    "TicTacToe",
+    "TicTacToeState",
+)
+
 import random
 from collections.abc import Mapping, Sequence
 from functools import cache
-from typing import TYPE_CHECKING, Annotated, Literal, override
+from typing import TYPE_CHECKING, Annotated, Final, Literal, override
 
 from annotated_types import Interval
 from pydantic import BaseModel, ConfigDict
@@ -15,14 +23,12 @@ from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
 if TYPE_CHECKING:
     from ludotastic.engine.render import Renderer
 
-__all__ = ["Mark", "MinimaxBot", "Place", "TicTacToe", "TicTacToeState"]
-
 type Mark = Literal["X", "O"]
 type Cell = Mark | None
 type Board = tuple[Cell, Cell, Cell, Cell, Cell, Cell, Cell, Cell, Cell]
 
-MARKS: tuple[Mark, Mark] = ("X", "O")
-LINES = (
+MARKS: Final[tuple[Mark, Mark]] = ("X", "O")
+LINES: Final = (
     (0, 1, 2),
     (3, 4, 5),
     (6, 7, 8),
@@ -32,8 +38,8 @@ LINES = (
     (0, 4, 8),
     (2, 4, 6),
 )
-ROWS = ("top", "middle", "bottom")
-COLUMNS = ("left", "center", "right")
+ROWS: Final = ("top", "middle", "bottom")
+COLUMNS: Final = ("left", "center", "right")
 
 
 class TicTacToeState(BaseModel):
@@ -102,7 +108,7 @@ def render_board(board: Board) -> str:
     return "\n---+---+---\n".join(rows)
 
 
-PICTURE = 420
+PICTURE: Final = 420
 """Side of the board picture, in pixels."""
 
 
@@ -131,7 +137,7 @@ def draw_board(board: Board) -> bytes:
     return canvas.png()
 
 
-MARK_COLORS = {"X": (37, 99, 235), "O": (225, 29, 72)}
+MARK_COLORS: Final = {"X": (37, 99, 235), "O": (225, 29, 72)}
 
 
 class TicTacToe(Game[TicTacToeState, Place]):

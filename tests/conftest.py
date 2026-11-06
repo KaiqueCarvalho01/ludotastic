@@ -1,5 +1,7 @@
 """Shared fixtures."""
 
+__all__: tuple[str, ...] = ()
+
 import os
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path

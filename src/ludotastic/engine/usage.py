@@ -1,11 +1,15 @@
 """What AI players spend: requests, tokens and money."""
 
+__all__: tuple[str, ...] = (
+    "Usage",
+    "format_cost",
+    "format_tokens",
+)
+
 from collections.abc import Iterable
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
-
-__all__ = ["Usage", "format_cost", "format_tokens"]
 
 
 class Usage(BaseModel):

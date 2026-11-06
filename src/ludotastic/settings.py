@@ -1,5 +1,10 @@
 """Configuration, read from the environment and `.env` files."""
 
+__all__: tuple[str, ...] = (
+    "Settings",
+    "get_settings",
+)
+
 from functools import cache
 from pathlib import Path
 
@@ -8,8 +13,6 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from ludotastic.types import NonNegativeFloat, PortNumber, PositiveFloat, PositiveInt
-
-__all__ = ["Settings", "get_settings"]
 
 
 class Settings(BaseSettings):

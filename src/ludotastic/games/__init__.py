@@ -3,3 +3,5 @@
 Each game is its own subpackage, registered through the `ludotastic.games`
 entry-point group exactly like games from other packages.
 """
+
+__all__: tuple[str, ...] = ()

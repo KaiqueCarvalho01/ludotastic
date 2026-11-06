@@ -1,6 +1,6 @@
 """The game engine: games, players, matches and the plugin registry."""
 
-__all__ = [
+__all__: tuple[str, ...] = (
     "ENTRY_POINT_GROUP",
     "AIPlayer",
     "ActionMode",
@@ -23,7 +23,7 @@ __all__ = [
     "TurnContext",
     "View",
     "registry",
-]
+)
 
 from .ai import AIPlayer
 from .game import ActionMode, Game, GameInfo, Outcome, Timing, View

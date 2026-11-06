@@ -1,5 +1,7 @@
 """The engine: games, matches, players and the registry."""
 
+__all__: tuple[str, ...] = ()
+
 import asyncio
 import random
 from collections.abc import Callable, Mapping, Sequence

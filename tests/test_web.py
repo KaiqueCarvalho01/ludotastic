@@ -1,5 +1,7 @@
 """The NiceGUI playground, driven by a simulated user."""
 
+__all__: tuple[str, ...] = ()
+
 import asyncio
 from typing import cast
 

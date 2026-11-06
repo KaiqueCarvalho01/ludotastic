@@ -1,5 +1,15 @@
 """The game abstraction every Ludotastic game implements."""
 
+__all__: tuple[str, ...] = (
+    "ActionMode",
+    "BotFactory",
+    "Game",
+    "GameInfo",
+    "Outcome",
+    "Timing",
+    "View",
+)
+
 import json
 import random
 from abc import ABC, abstractmethod
@@ -16,16 +26,6 @@ if TYPE_CHECKING:
 
     from ludotastic.engine.players import Player
     from ludotastic.engine.render import Renderer
-
-__all__ = [
-    "ActionMode",
-    "BotFactory",
-    "Game",
-    "GameInfo",
-    "Outcome",
-    "Timing",
-    "View",
-]
 
 
 class Timing(StrEnum):

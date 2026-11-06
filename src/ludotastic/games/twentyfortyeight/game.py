@@ -1,10 +1,18 @@
 """2048 rules."""
 
+__all__: tuple[str, ...] = (
+    "Direction",
+    "GreedyBot",
+    "Slide",
+    "TwentyFortyEight",
+    "TwentyFortyEightState",
+)
+
 import random
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from itertools import pairwise
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Final, override
 
 from pydantic import BaseModel, ConfigDict
 
@@ -15,24 +23,16 @@ from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
 if TYPE_CHECKING:
     from ludotastic.engine.render import Renderer
 
-__all__ = [
-    "Direction",
-    "GreedyBot",
-    "Slide",
-    "TwentyFortyEight",
-    "TwentyFortyEightState",
-]
-
-SIZE = 4
-GOAL = 2048
-FOUR_CHANCE = 0.1
+SIZE: Final = 4
+GOAL: Final = 2048
+FOUR_CHANCE: Final = 0.1
 """How often a new tile is a 4 rather than a 2."""
 
 type Row = tuple[int, int, int, int]
 type Board = tuple[Row, Row, Row, Row]
 """Rows top to bottom; 0 is an empty cell."""
 
-EMPTY: Board = ((0,) * SIZE,) * SIZE  # ty: ignore[invalid-assignment]
+EMPTY: Final[Board] = ((0,) * SIZE,) * SIZE  # ty: ignore[invalid-assignment]
 
 
 class Direction(StrEnum):
@@ -185,10 +185,10 @@ def render_board(board: Board) -> str:
     )
 
 
-TILE = 110
-GAP = 12
+TILE: Final = 110
+GAP: Final = 12
 # Background and text colors per tile, after the original game.
-TILE_COLORS = {
+TILE_COLORS: Final = {
     0: ("#cdc1b4", "#776e65"),
     2: ("#eee4da", "#776e65"),
     4: ("#ede0c8", "#776e65"),
@@ -202,7 +202,7 @@ TILE_COLORS = {
     1024: ("#edc53f", "#f9f6f2"),
     2048: ("#edc22e", "#f9f6f2"),
 }
-BIG_TILE = ("#3c3a32", "#f9f6f2")
+BIG_TILE: Final = ("#3c3a32", "#f9f6f2")
 
 
 def draw_board(board: Board) -> bytes:
@@ -406,7 +406,7 @@ class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
 
 # The corner strategy: keep the big tiles in the bottom-left, in a row that
 # grows towards that corner, and avoid sliding up.
-PREFERENCE = (Direction.DOWN, Direction.LEFT, Direction.RIGHT, Direction.UP)
+PREFERENCE: Final = (Direction.DOWN, Direction.LEFT, Direction.RIGHT, Direction.UP)
 
 
 def _monotonic(board: Board) -> int:

@@ -1,5 +1,7 @@
 """The REST API."""
 
+__all__: tuple[str, ...] = ()
+
 import asyncio
 from collections.abc import AsyncIterator
 from typing import Any

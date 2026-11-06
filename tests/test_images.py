@@ -1,10 +1,12 @@
 """Image views: Jev seeing pictures through Pydantic AI, and games drawing them."""
 
+__all__: tuple[str, ...] = ()
+
 import io
 import json
 import random
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Final
 
 import httpx2
 import pytest
@@ -28,7 +30,7 @@ from ludotastic.games.tictactoe import TicTacToe
 from ludotastic.games.twentyfortyeight import TwentyFortyEight
 from ludotastic.service import AISpec, BotSpec, MatchService
 
-PNG = TicTacToe().snapshot(TicTacToe().initial_state(random.Random(0)), 0)
+PNG: Final = TicTacToe().snapshot(TicTacToe().initial_state(random.Random(0)), 0)
 
 
 def fake_jev(seen: list[httpx2.Request]) -> TypeSafeImageModel:

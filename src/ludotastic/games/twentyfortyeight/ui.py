@@ -1,5 +1,9 @@
 """2048 in NiceGUI."""
 
+__all__: tuple[str, ...] = ("render",)
+
+from typing import Final
+
 from nicegui import ui
 from nicegui.events import KeyEventArguments
 
@@ -12,9 +16,7 @@ from ludotastic.games.twentyfortyeight.game import (
     TwentyFortyEightState,
 )
 
-__all__ = ["render"]
-
-KEYS = {
+KEYS: Final = {
     "ArrowUp": Direction.UP,
     "ArrowDown": Direction.DOWN,
     "ArrowLeft": Direction.LEFT,
@@ -24,7 +26,7 @@ KEYS = {
     "a": Direction.LEFT,
     "d": Direction.RIGHT,
 }
-ARROWS = {
+ARROWS: Final = {
     Direction.UP: "keyboard_arrow_up",
     Direction.DOWN: "keyboard_arrow_down",
     Direction.LEFT: "keyboard_arrow_left",

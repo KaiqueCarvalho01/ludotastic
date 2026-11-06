@@ -1,8 +1,10 @@
 """Model usage and cost: per move, per match, stored, and shown."""
 
+__all__: tuple[str, ...] = ()
+
 from decimal import Decimal
 from pathlib import Path
-from typing import override
+from typing import Final, override
 
 import pytest
 from nicegui import ui
@@ -16,8 +18,10 @@ from ludotastic.games.tictactoe import TicTacToe
 from ludotastic.service import MatchService
 from ludotastic.settings import get_settings
 
-PRICED = Usage(requests=1, input_tokens=600, output_tokens=40, cost=Decimal("0.00002"))
-UNPRICED = Usage(requests=1, input_tokens=100, output_tokens=10)
+PRICED: Final = Usage(
+    requests=1, input_tokens=600, output_tokens=40, cost=Decimal("0.00002")
+)
+UNPRICED: Final = Usage(requests=1, input_tokens=100, output_tokens=10)
 
 
 class Spender(Player):

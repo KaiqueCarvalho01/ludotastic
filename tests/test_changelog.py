@@ -6,17 +6,17 @@ flag is missing, the file is written back unchanged and nothing warns about it,
 so releases silently go unrecorded. These tests fail the build instead.
 """
 
-from __future__ import annotations
+__all__: tuple[str, ...] = ()
 
 import tomllib
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-PYPROJECT = REPO_ROOT / "pyproject.toml"
-RELEASE_HEADING = "\n## v"
+REPO_ROOT: Final = Path(__file__).resolve().parent.parent
+PYPROJECT: Final = REPO_ROOT / "pyproject.toml"
+RELEASE_HEADING: Final = "\n## v"
 
 
 @pytest.fixture(scope="module")

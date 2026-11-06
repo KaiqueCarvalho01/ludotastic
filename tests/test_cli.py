@@ -1,5 +1,7 @@
 """The `ludotastic` command."""
 
+__all__: tuple[str, ...] = ()
+
 import os
 from pathlib import Path
 

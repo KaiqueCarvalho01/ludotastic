@@ -1,5 +1,14 @@
 """Players: whoever, or whatever, chooses the actions."""
 
+__all__: tuple[str, ...] = (
+    "Decision",
+    "HumanPlayer",
+    "Player",
+    "PlayerKind",
+    "RandomBot",
+    "TurnContext",
+)
+
 import asyncio
 import random
 from abc import ABC, abstractmethod
@@ -12,15 +21,6 @@ from pydantic import BaseModel
 
 from ludotastic.engine.game import Game
 from ludotastic.engine.usage import Usage
-
-__all__ = [
-    "Decision",
-    "HumanPlayer",
-    "Player",
-    "PlayerKind",
-    "RandomBot",
-    "TurnContext",
-]
 
 
 class PlayerKind(StrEnum):

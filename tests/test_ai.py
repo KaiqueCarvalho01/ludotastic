@@ -1,5 +1,7 @@
 """AI players, using Pydantic AI's test and function models."""
 
+__all__: tuple[str, ...] = ()
+
 import json
 import random
 from typing import override

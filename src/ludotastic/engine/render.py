@@ -1,5 +1,10 @@
 """The interface between games and the UI."""
 
+__all__: tuple[str, ...] = (
+    "RenderContext",
+    "Renderer",
+)
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
@@ -8,8 +13,6 @@ from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from ludotastic.engine.match import Match
-
-__all__ = ["RenderContext", "Renderer"]
 
 
 @dataclass(frozen=True, kw_only=True)

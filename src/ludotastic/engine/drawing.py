@@ -1,10 +1,13 @@
 """Drawing game pictures for AI players that read images."""
 
+__all__: tuple[str, ...] = (
+    "Canvas",
+    "png",
+)
+
 import io
 
 from PIL import Image, ImageDraw, ImageFont
-
-__all__ = ["Canvas", "png"]
 
 type Color = str | tuple[int, int, int]
 

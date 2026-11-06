@@ -1,5 +1,12 @@
 """Matches: a game, its players, and the loop that runs them."""
 
+__all__: tuple[str, ...] = (
+    "Match",
+    "MatchStatus",
+    "MoveRecord",
+    "SeatInfo",
+)
+
 import asyncio
 import contextlib
 import random
@@ -15,13 +22,6 @@ from pydantic import BaseModel, Field
 from ludotastic.engine.game import Game, Outcome, Timing
 from ludotastic.engine.players import Decision, HumanPlayer, Player, TurnContext
 from ludotastic.engine.usage import Usage
-
-__all__ = [
-    "Match",
-    "MatchStatus",
-    "MoveRecord",
-    "SeatInfo",
-]
 
 
 class MatchStatus(StrEnum):

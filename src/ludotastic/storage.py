@@ -1,5 +1,11 @@
 """Match history and statistics, stored with SQLModel."""
 
+__all__: tuple[str, ...] = (
+    "MatchRecord",
+    "PlayerStats",
+    "Store",
+)
+
 from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Any
@@ -12,8 +18,6 @@ from sqlmodel import Field, Session, SQLModel, col, create_engine, select
 
 from ludotastic.engine.match import Match
 from ludotastic.engine.usage import Usage
-
-__all__ = ["MatchRecord", "PlayerStats", "Store"]
 
 
 class MatchRecord(SQLModel, table=True):
