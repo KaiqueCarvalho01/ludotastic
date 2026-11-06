@@ -14,6 +14,10 @@ from ludotastic.games.tictactoe.game import (
 __all__ = ["render"]
 
 COLORS = {"X": "text-blue-500", "O": "text-rose-500"}
+# Quasar fades disabled buttons; a played cell should stay as crisp as any other.
+CRISP = "!opacity-100 disabled:!cursor-default"
+# Quasar sizes buttons by their content; force square cells instead.
+CELL_SIZE = "!p-0 !w-24 !h-24 !min-h-0 sm:!w-28 sm:!h-28"
 
 
 def _winning_cells(state: TicTacToeState) -> set[int]:
@@ -46,11 +50,14 @@ def render(ctx: RenderContext) -> None:
                     color=None,
                 )
                 .props("flat bordered" + (" disable" if mark or not clickable else ""))
-                .classes("w-24 h-24 text-5xl font-bold rounded-lg")
+                .classes(f"{CELL_SIZE} text-6xl font-bold rounded-xl {CRISP}")
                 .classes(COLORS.get(mark or "", ""))
                 .mark(f"cell-{cell}")
             )
             if cell in highlight:
-                button.classes("bg-yellow-200 dark:bg-yellow-800")
+                button.classes("bg-amber-200 dark:bg-amber-700/60")
+            elif clickable and mark is None:
+                button.classes("bg-gray-100 dark:bg-gray-800")
+                button.classes("hover:bg-blue-100 dark:hover:bg-gray-700")
             else:
                 button.classes("bg-gray-100 dark:bg-gray-800")

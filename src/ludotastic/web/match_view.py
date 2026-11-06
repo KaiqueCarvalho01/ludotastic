@@ -7,7 +7,7 @@ from nicegui import ui
 from pydantic import BaseModel
 
 from ludotastic.engine.game import Game
-from ludotastic.engine.match import Match, MatchStatus
+from ludotastic.engine.match import Match, MatchStatus, MoveRecord
 from ludotastic.engine.players import HumanPlayer
 from ludotastic.engine.render import RenderContext
 
@@ -59,6 +59,34 @@ def _details(details: dict[str, Any]) -> str:
     return json.dumps(details, indent=2, default=str)
 
 
+def _move_row(game: Game[Any, Any], move: MoveRecord) -> None:
+    """One line of the move list, expandable when there is more to show."""
+    title = f"{move.turn + 1}. {game.player_label(move.seat)}: {move.description}"
+    confidence = move.details.get("confidence", {}).get("response")
+    if not move.details and not move.forced:
+        ui.label(title).classes("w-full py-2 px-4 text-sm")
+        return
+    with ui.expansion().classes("w-full").props("dense") as expansion:
+        with (
+            expansion.add_slot("header"),
+            ui.row().classes("w-full items-center gap-2 no-wrap py-1"),
+        ):
+            ui.label(title).classes("grow text-sm")
+            if move.details.get("forced") or move.forced:
+                ui.badge("forced", color="grey").props("outline")
+            elif confidence is not None:
+                ui.badge(f"{confidence:.0%}", color="grey").props("outline").tooltip(
+                    "How sure the model was"
+                )
+        ui.label(f"{move.seconds:.2f}s").classes("text-xs text-gray-500")
+        if move.forced:
+            ui.label("Forced: the player was too slow.").classes("text-sm")
+        elif move.details.get("forced"):
+            ui.label("Forced: the only legal move.").classes("text-sm")
+        if move.details:
+            ui.code(_details(move.details), language="json").classes("w-full text-xs")
+
+
 def match_view(match: Match) -> None:  # noqa: C901, PLR0915
     """Draw a match, and keep it up to date."""
     game: Game[Any, Any] = match.game
@@ -88,9 +116,17 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
             "Abort", icon="stop", color="negative", on_click=match.abort
         ).props("outline")
 
-    with ui.row().classes("w-full items-start gap-8 no-wrap max-md:flex-wrap"):
-        with ui.column().classes("items-center grow"):
-            banner = ui.label().classes("text-xl").mark("banner")
+    with ui.element("div").classes(
+        "w-full grid gap-6 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_28rem] items-start"
+    ):
+        with ui.column().classes("items-center gap-4 min-w-0"):
+            banner_card = ui.card().classes("w-full max-w-2xl").props("flat bordered")
+            with banner_card:
+                banner = (
+                    ui.label()
+                    .classes("w-full text-lg text-center break-words")
+                    .mark("banner")
+                )
 
             @ui.refreshable
             def board() -> None:
@@ -98,23 +134,24 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
 
             board()
 
-        with ui.column().classes("w-96 max-md:w-full"):
+        with ui.column().classes("w-full gap-4 min-w-0"):
             with ui.card().classes("w-full"):
                 ui.label("Players").classes("text-lg font-bold")
 
                 @ui.refreshable
                 def seats() -> None:
                     for seat in match.seats:
-                        with ui.row().classes("items-center gap-2"):
-                            ui.badge(seat.label)
-                            ui.label(seat.player)
-                            ui.label(f"({seat.kind})").classes("text-gray-500")
+                        with ui.row().classes("w-full items-center gap-2 no-wrap"):
+                            ui.badge(seat.label).classes("text-sm")
+                            with ui.column().classes("gap-0 min-w-0 grow"):
+                                ui.label(seat.player).classes("break-all font-medium")
+                                ui.label(seat.kind).classes("text-xs text-gray-500")
                             if seat.seat in match.thinking:
                                 ui.spinner(size="sm")
                             if match.outcome:
                                 ui.label(
                                     f"{match.outcome.scores[seat.seat]:g}"
-                                ).classes("font-bold")
+                                ).classes("text-lg font-bold")
 
                 seats()
 
@@ -125,22 +162,9 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
                 def history() -> None:
                     if not match.history:
                         ui.label("No moves yet.").classes("text-gray-500")
-                    for move in reversed(match.history[-50:]):
-                        title = (
-                            f"{move.turn + 1}. {game.player_label(move.seat)}: "
-                            f"{move.description}"
-                        )
-                        if move.details or move.forced:
-                            with ui.expansion(title).classes("w-full").props("dense"):
-                                ui.label(f"{move.seconds:.2f}s").classes(
-                                    "text-gray-500"
-                                )
-                                if move.forced:
-                                    ui.label("Forced: the player was too slow.")
-                                if move.details:
-                                    ui.code(_details(move.details), language="json")
-                        else:
-                            ui.label(title)
+                    with ui.column().classes("w-full gap-0"):
+                        for move in reversed(match.history[-50:]):
+                            _move_row(game, move)
 
                 history()
 
@@ -170,6 +194,13 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
         status_badge.props(f"color={STATUS_COLORS[match.status]}")
         abort.set_visibility(not match.done)
         banner.set_text(banner_text())
+        failed = match.status is MatchStatus.ABORTED or (
+            match.outcome is not None and "failed" in match.outcome.reason
+        )
+        banner_card.classes(
+            add="border-red-500" if failed else "",
+            remove="" if failed else "border-red-500",
+        )
         board.refresh()
         seats.refresh()
         history.refresh()

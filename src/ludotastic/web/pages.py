@@ -1,6 +1,5 @@
 """The NiceGUI playground."""
 
-import json
 from collections.abc import Callable
 from functools import partial
 from typing import Any
@@ -9,7 +8,14 @@ from nicegui import ui
 
 from ludotastic.engine.game import Game
 from ludotastic.engine.players import PlayerKind
-from ludotastic.service import AISpec, BotSpec, HumanSpec, MatchService, bot_names
+from ludotastic.service import (
+    AISpec,
+    BotSpec,
+    HumanSpec,
+    MatchService,
+    bot_names,
+    replay,
+)
 from ludotastic.web.match_view import match_view
 
 __all__ = ["build_root"]
@@ -18,18 +24,32 @@ NAV = (("Games", "/"), ("Live", "/live"), ("History", "/history"), ("Stats", "/s
 
 
 def _header(service: MatchService) -> None:
-    with ui.header().classes("items-center"):
+    with ui.header().classes("items-center no-wrap gap-2 sm:gap-4 px-3 sm:px-6 py-2"):
         ui.link(service.settings.title, "/").classes(
-            "text-xl font-bold text-white no-underline"
+            "text-lg sm:text-xl font-bold text-white no-underline shrink-0"
         )
         ui.space()
-        for label, path in NAV:
-            ui.link(label, path).classes("text-white")
-        ui.link("API", "/docs", new_tab=True).classes("text-white")
+        with ui.row().classes(
+            "items-center no-wrap gap-3 sm:gap-5 text-sm sm:text-base"
+        ):
+            for label, path in NAV:
+                ui.link(label, path).classes("text-white no-underline hover:underline")
+            ui.link("API", "/docs", new_tab=True).classes(
+                "text-white no-underline hover:underline max-sm:hidden"
+            )
         dark = ui.dark_mode(service.settings.dark)
-        ui.button(icon="dark_mode", on_click=dark.toggle).props(
-            "flat round color=white"
-        )
+
+        async def toggle_dark() -> None:
+            # In auto mode, `dark.value` is None and `toggle()` refuses: flip
+            # whatever the browser is showing instead.
+            if dark.value is None:
+                dark.value = not await ui.run_javascript("Quasar.Dark.isActive")
+            else:
+                dark.toggle()
+
+        ui.button(icon="dark_mode", on_click=toggle_dark).props(
+            "flat round dense color=white"
+        ).tooltip("Toggle dark mode").mark("dark-toggle")
 
 
 def _games_page(service: MatchService) -> None:
@@ -218,7 +238,15 @@ def _history_page(service: MatchService) -> None:
         for k in ("date", "game", "players", "scores", "reason", "turns", "status")
     ]
     table = ui.table(columns=columns, rows=rows, row_key="id", pagination=20)
-    table.classes("w-full")
+    table.classes("w-full cursor-pointer")
+    table.add_slot(
+        "body-cell-reason",
+        r"""
+        <q-td :props="props">
+          <div class="max-w-md truncate" :title="props.value">{{ props.value }}</div>
+        </q-td>
+        """,
+    )
     table.on("rowClick", lambda e: ui.navigate.to(f"/history/{e.args[1]['id']}"))
 
 
@@ -227,17 +255,15 @@ def _history_match_page(service: MatchService, match_id: str) -> None:
     if record is None:
         ui.label("No stored match with that id.")
         return
-    ui.label(f"{record.game_id}: {record.status}").classes("text-2xl font-bold")
-    ui.label(record.reason or "")
-    scores = record.scores or [None] * len(record.seats)
-    for seat, score in zip(record.seats, scores, strict=True):
-        result = "" if score is None else f": {score:g}"
-        ui.label(f"{seat['label']}: {seat['player']} ({seat['group']}){result}")
-    ui.label(f"Seed {record.seed}, {record.turns} turns").classes("text-gray-500")
-    for move in record.history:
-        title = f"{move['turn'] + 1}. seat {move['seat']}: {move['description']}"
-        with ui.expansion(title).classes("w-full").props("dense"):
-            ui.code(json.dumps(move["details"], indent=2), language="json")
+    try:
+        match = replay(service.games, record)
+    except KeyError:
+        ui.label(f"The game {record.game_id!r} is not installed.")
+        return
+    match_view(match)
+    ui.label(f"Seed {record.seed}, {record.turns} turns").classes(
+        "text-sm text-gray-500"
+    )
 
 
 def _stats_page(service: MatchService) -> None:
@@ -278,7 +304,7 @@ def build_root(service: MatchService) -> Callable[[], None]:
 
     def root() -> None:
         _header(service)
-        with ui.column().classes("w-full max-w-6xl mx-auto p-4"):
+        with ui.column().classes("w-full max-w-7xl mx-auto p-4"):
             ui.sub_pages(
                 {
                     "/": partial(_games_page, service),

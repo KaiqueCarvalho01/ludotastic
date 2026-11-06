@@ -158,3 +158,33 @@ async def test_stats_skip_unscored(service: MatchService) -> None:
         session.add(record)
         session.commit()
     assert service.store.stats() == []
+
+
+async def test_replay_rebuilds_the_final_state(service: MatchService) -> None:
+    from ludotastic.service import replay  # noqa: PLC0415
+
+    match = service.create("tictactoe", [BotSpec(bot="minimax"), BotSpec()], seed=9)
+    await match.start()
+    record = service.store.get(match.id)
+    assert record is not None
+    replayed = replay(service.games, record)
+    assert replayed.state == match.state
+    assert replayed.outcome == match.outcome
+    assert replayed.status is MatchStatus.FINISHED
+    assert [p.label for p in replayed.players] == [p.label for p in match.players]
+    assert replayed.turn == match.turn
+
+
+async def test_replay_aborted(service: MatchService) -> None:
+    from ludotastic.service import replay  # noqa: PLC0415
+
+    match = service.create("tictactoe", [HumanSpec(), BotSpec()])
+    await asyncio.sleep(0.01)
+    match.abort("bye")
+    await asyncio.sleep(0.01)
+    record = service.store.get(match.id)
+    assert record is not None
+    replayed = replay(service.games, record)
+    assert replayed.status is MatchStatus.ABORTED
+    assert replayed.outcome is None
+    assert replayed.error == "bye"

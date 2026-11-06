@@ -1,17 +1,24 @@
 """Running matches for the UI, the API and the CLI."""
 
 from collections.abc import Sequence
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, override
 
 from pydantic import BaseModel, Field
 
 from ludotastic.engine.ai import AIPlayer
-from ludotastic.engine.game import ActionMode, Game
-from ludotastic.engine.match import Match
-from ludotastic.engine.players import HumanPlayer, Player, PlayerKind, RandomBot
+from ludotastic.engine.game import ActionMode, Game, Outcome
+from ludotastic.engine.match import Match, MatchStatus, MoveRecord
+from ludotastic.engine.players import (
+    Decision,
+    HumanPlayer,
+    Player,
+    PlayerKind,
+    RandomBot,
+    TurnContext,
+)
 from ludotastic.engine.registry import GameRegistry, registry
 from ludotastic.settings import Settings, get_settings
-from ludotastic.storage import Store
+from ludotastic.storage import MatchRecord, Store
 
 __all__ = [
     "AISpec",
@@ -20,6 +27,7 @@ __all__ = [
     "MatchService",
     "PlayerSpec",
     "bot_names",
+    "replay",
 ]
 
 
@@ -88,6 +96,54 @@ def build_player(game: Game[Any, Any], spec: HumanSpec | BotSpec | AISpec) -> Pl
                 instructions=spec.instructions,
                 fallback_model=spec.fallback_model,
             )
+
+
+class _Recorded(Player):
+    """A seat in a replayed match; it never plays."""
+
+    def __init__(self, name: str, kind: str, group: str) -> None:
+        super().__init__(name)
+        self.kind = PlayerKind(kind)
+        self._group = group
+
+    @property
+    @override
+    def label(self) -> str:
+        return self._group
+
+    @override
+    async def act(self, ctx: TurnContext) -> Decision:  # pragma: no cover
+        msg = "A replayed match cannot be played"
+        raise RuntimeError(msg)
+
+
+def replay(games: GameRegistry, record: MatchRecord) -> Match:
+    """Rebuild a finished match from storage, for viewing.
+
+    The moves are applied again from the initial state with the stored seed, so
+    the final state matches the original.
+
+    Raises:
+        KeyError: If the game is no longer installed.
+    """
+    game = games[record.game_id](len(record.seats))
+    players = [_Recorded(s["player"], s["kind"], s["group"]) for s in record.seats]
+    match = Match(game, players, seed=record.seed)
+    match.id = record.id
+    match.created_at = record.created_at
+    match.finished_at = record.finished_at
+    moves = [MoveRecord.model_validate(m) for m in record.history]
+    for turn in sorted({m.turn for m in moves}):
+        actions = {m.seat: game.parse_action(m.action) for m in moves if m.turn == turn}
+        match.state = game.apply(match.state, actions, match.rng)
+    match.history = moves
+    match._turns = record.turns  # noqa: SLF001
+    match.status = MatchStatus(record.status)
+    if record.scores is not None:
+        match.outcome = Outcome(scores=tuple(record.scores), reason=record.reason or "")
+    else:
+        match.error = record.reason
+    return match
 
 
 class MatchService:

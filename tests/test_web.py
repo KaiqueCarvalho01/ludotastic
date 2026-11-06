@@ -1,14 +1,21 @@
 """The NiceGUI playground, driven by a simulated user."""
 
 import asyncio
+from typing import cast
 
 import pytest
 from nicegui import ui
+from nicegui.elements.dark_mode import DarkMode
 from nicegui.testing import User
 
 from ludotastic.engine.match import Match, MatchStatus
 from ludotastic.games.tictactoe import TicTacToeState
 from ludotastic.service import BotSpec, HumanSpec, MatchService
+
+
+def _value(element: DarkMode) -> bool | None:
+    # NiceGUI's bindable `value` is untyped.
+    return cast("bool | None", element.value)
 
 
 def _settled(match: Match) -> bool:
@@ -96,6 +103,7 @@ async def test_history_and_stats(user: User, service: MatchService) -> None:
     assert table.rows[0]["id"] == match.id
     await user.open(f"/history/{match.id}")
     await user.should_see("X got three in a row")
+    await user.should_see("Seed 2")
     await user.open("/stats")
     table = user.find(ui.table).elements.pop()
     assert isinstance(table, ui.table)
@@ -176,12 +184,24 @@ async def test_forced_moves_and_details(user: User, service: MatchService) -> No
             action={"cell": 1},
             description="Thought",
             seconds=1,
-            details={"model": "test"},
+            details={"model": "test", "confidence": {"response": 0.25}},
+        )
+    )
+    match.history.append(
+        MoveRecord(
+            turn=2,
+            seat=0,
+            action={"cell": 2},
+            description="Only move",
+            seconds=0,
+            details={"mode": "choice", "forced": True},
         )
     )
     await user.open(f"/match/{match.id}")
     await user.should_see("1. X: Waited")
     await user.should_see("2. O: Thought")
+    await user.should_see("25%")
+    await user.should_see("3. X: Only move")
     await user.should_see("...")
 
 
@@ -208,3 +228,40 @@ async def test_generic_renderer_skips_other_seats(
     await user.open(f"/match/{match.id}")
     await user.should_see("X to move")
     await user.should_not_see("Place your mark in the center (cell 4).")
+
+
+async def test_history_of_uninstalled_game(user: User, service: MatchService) -> None:
+    match = service.create("tictactoe", [BotSpec(), BotSpec()], seed=1)
+    await match.start()
+    record = service.store.get(match.id)
+    assert record is not None
+    record.game_id = "gone"
+    from sqlmodel import Session  # noqa: PLC0415
+
+    with Session(service.store.engine) as session:
+        session.merge(record)
+        session.commit()
+    await user.open(f"/history/{match.id}")
+    await user.should_see("The game 'gone' is not installed.")
+
+
+async def test_dark_mode_toggle(
+    user: User, service: MatchService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def browser_is_dark(code: str) -> bool:
+        assert code == "Quasar.Dark.isActive"
+        return True
+
+    monkeypatch.setattr(ui, "run_javascript", browser_is_dark)
+    await user.open("/")
+    dark = user.find(DarkMode).elements.pop()
+    assert isinstance(dark, DarkMode)
+    assert dark.value is None  # Follows the system by default.
+    # From auto, the first click flips what the browser shows: dark, so light.
+    for expected in (False, True, False):
+        user.find(marker="dark-toggle").click()
+        for _ in range(50):
+            if _value(dark) is expected:
+                break
+            await asyncio.sleep(0.01)
+        assert dark.value is expected
