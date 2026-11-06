@@ -129,6 +129,14 @@ class HumanPlayer(Player):
     def cancel(self) -> None:
         """Stop waiting, and drop any action handed in early."""
         self._pending = None
+        self.timeout()
+
+    def timeout(self) -> None:
+        """Stop waiting for this turn, but keep any action handed in early.
+
+        Real-time games call this when a tick ends: a key pressed in between
+        ticks still counts for the next one.
+        """
         if self._future is not None and not self._future.done():
             self._future.cancel()
 

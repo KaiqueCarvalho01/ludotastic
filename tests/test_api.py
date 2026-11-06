@@ -36,7 +36,7 @@ async def wait_for_turn(
 
 async def test_games(client: httpx2.AsyncClient) -> None:
     games = (await client.get("/api/games")).json()
-    assert [g["id"] for g in games] == ["tictactoe"]
+    assert [g["id"] for g in games] == ["snake", "tictactoe"]
     game = (await client.get("/api/games/tictactoe")).json()
     assert game["bots"] == ["random", "minimax"]
     assert "cell" in game["action_schema"]["properties"]

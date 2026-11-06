@@ -32,7 +32,12 @@ class Timing(StrEnum):
     """The game waits for every player that has to act before advancing."""
 
     TICK = "tick"
-    """The game advances on a clock, and a player that is too slow loses its turn."""
+    """The game advances on a clock, and a person who is too slow loses their turn.
+
+    Only human seats are held to the clock. Bots and AI players are waited for,
+    so a tick lasts as long as the slowest of them takes; otherwise slow models
+    would miss nearly every tick.
+    """
 
 
 class ActionMode(StrEnum):
@@ -217,6 +222,13 @@ class Game[S: BaseModel, A: BaseModel](ABC):
     def outcome(self, state: S) -> Outcome | None:
         """The outcome if the match is over, otherwise `None`."""
 
+    def out_of_turns(self, state: S) -> Outcome:  # noqa: ARG002
+        """The outcome when a match reaches its turn limit.
+
+        A draw by default; solo games should keep the score earned so far.
+        """
+        return Outcome.draw(self.num_players, "Turn limit reached")
+
     @abstractmethod
     def observe(self, state: S, player: int) -> str:
         """Describe `state` in text, as `player` sees it.
@@ -228,6 +240,17 @@ class Game[S: BaseModel, A: BaseModel](ABC):
     def describe_action(self, action: A) -> str:
         """Describe an action in words, for people and AI players alike."""
         return self.action_key(action)
+
+    def describe_option(self, state: S, player: int, action: A) -> str:
+        """Describe a legal action as an option for an AI player to pick.
+
+        Defaults to [`describe_action`][ludotastic.Game.describe_action]. Games
+        can add facts about what the action leads to in `state`, which helps
+        decision models that struggle to read them off a drawing. Keep it to
+        facts; ranking the options measures the game's code, not the model.
+        """
+        del state, player
+        return self.describe_action(action)
 
     def action_key(self, action: A) -> str:
         """A short, unique, stable identifier for an action."""

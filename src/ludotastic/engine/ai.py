@@ -186,7 +186,9 @@ class AIPlayer(Player):
     def _choice_agent(self, ctx: TurnContext) -> Agent[_Turn, Any]:
         game = ctx.game
         options = {
-            key: Choice(game.describe_action(action), value=action)
+            key: Choice(
+                game.describe_option(ctx.state, ctx.player, action), value=action
+            )
             for key, action in _legal_keys(ctx).items()
         }
         choices = Choices(
@@ -227,7 +229,8 @@ def _engine_tools() -> Sequence[Tool[_Turn]]:
         """List every legal move, described in words."""
         turn = run.deps.ctx
         return [
-            f"{turn.game.action_key(a)}: {turn.game.describe_action(a)}"
+            f"{turn.game.action_key(a)}: "
+            f"{turn.game.describe_option(turn.state, turn.player, a)}"
             for a in turn.legal_actions
         ]
 

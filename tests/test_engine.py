@@ -274,21 +274,65 @@ async def test_step_timeout_forfeits() -> None:
     assert "ran out of time" in outcome.reason
 
 
+def ready(name: str) -> HumanPlayer:
+    """A person who has already pressed a key, and then goes idle."""
+    human = HumanPlayer(name)
+    human.submit(Step(by=0))
+    return human
+
+
 async def test_max_turns() -> None:
-    match = Match(Race(), [Sleeper("a"), Sleeper("b")], max_turns=2)
+    match = Match(Race(), [ready("a"), ready("b")], max_turns=2)
     outcome = await match.run()
     assert outcome is not None
     assert outcome.reason == "Turn limit reached"
     assert match.turn == 2
-    assert [m.forced for m in match.history] == [True, True]
+    # The first tick waits for each person; the second times them out.
+    assert [m.forced for m in match.history] == [False, False, True]
 
 
 async def test_tick_game_and_delay() -> None:
-    match = Match(Race(), [Runner("r"), Sleeper("s")], delay=0.001)
+    match = Match(Race(), [Runner("r"), ready("h")], delay=0.001)
     outcome = await match.run()
     assert outcome is not None
     assert outcome.scores == (1.0, 0.0)
     assert match.state.positions == (3, 0)  # ty: ignore[unresolved-attribute]
+
+
+class Slowpoke(Player):
+    """A bot slower than a tick, but not forever."""
+
+    kind = PlayerKind.BOT
+
+    @override
+    async def act(self, ctx: TurnContext) -> Decision:
+        await asyncio.sleep(Race.info.tick_seconds * 2)
+        return Decision(action=Step(by=1))
+
+
+async def test_ticks_wait_for_bots_and_ai() -> None:
+    """Only people are held to the clock; a slow bot never misses a tick."""
+    match = Match(Race(), [Slowpoke("slow"), ready("h")])
+    outcome = await match.run()
+    assert outcome is not None
+    assert outcome.scores == (1.0, 0.0)
+    assert [m.forced for m in match.history if m.seat == 0] == [False] * 3
+
+
+async def test_ticks_keep_a_steady_pace_for_people() -> None:
+    human = ready("h")
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    await Match(Race(), [Runner("a"), human]).run()
+    # Three ticks; the first waits for the person instead of the clock.
+    assert loop.time() - started >= 2 * Race.info.tick_seconds
+
+
+async def test_bot_only_ticks_run_flat_out() -> None:
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    await Match(Race(), [Runner("a"), Runner("b")]).run()
+    assert loop.time() - started < Race.info.tick_seconds
 
 
 async def test_human_player() -> None:
@@ -329,8 +373,17 @@ async def test_human_can_act_ahead_in_tick_games() -> None:
     )
     assert (await human.act(ctx)).action == Step(by=1)
     match.submit(0, Step(by=1))
-    human.cancel()
+    human.timeout()  # A tick ending keeps the key press for the next one.
+    assert (await human.act(ctx)).action == Step(by=1)
+    match.submit(0, Step(by=1))
+    human.cancel()  # The match ending drops it.
     assert not human.waiting
+    task = asyncio.create_task(human.act(ctx))
+    await asyncio.sleep(0)
+    assert human.waiting
+    human.timeout()
+    with pytest.raises(asyncio.CancelledError):
+        await task
 
 
 async def test_cancelling_the_task_aborts() -> None:

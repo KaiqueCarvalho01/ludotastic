@@ -68,7 +68,8 @@ def _games_page(service: MatchService) -> None:
                         if info.min_players == info.max_players
                         else f"{info.min_players}-{info.max_players}"
                     )
-                    ui.badge(f"{players} players", color="grey")
+                    noun = "player" if info.max_players == 1 else "players"
+                    ui.badge(f"{players} {noun}", color="grey")
                     ui.badge(str(info.timing), color="grey")
                     for tag in info.tags:
                         ui.badge(tag, color="grey").props("outline")

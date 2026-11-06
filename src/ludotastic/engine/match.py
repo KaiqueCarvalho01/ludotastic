@@ -206,7 +206,7 @@ class Match:
         try:
             while (outcome := self.game.outcome(self.state)) is None:
                 if self.max_turns is not None and self.turn >= self.max_turns:
-                    outcome = Outcome.draw(self.game.num_players, "Turn limit reached")
+                    outcome = self.game.out_of_turns(self.state)
                     break
                 forfeit = await self._play_turn()
                 if forfeit is not None:
@@ -245,7 +245,7 @@ class Match:
         seats = list(game.to_move(self.state))
         ticking = game.info.timing is Timing.TICK
         timeout = game.info.tick_seconds if ticking else self.turn_timeout
-        decisions = await self._ask(seats, timeout)
+        decisions = await self._ask(seats, timeout, ticking=ticking)
 
         actions: dict[int, BaseModel] = {}
         for seat in seats:
@@ -276,9 +276,14 @@ class Match:
         return None
 
     async def _ask(
-        self, seats: list[int], deadline: float | None
+        self, seats: list[int], deadline: float | None, *, ticking: bool = False
     ) -> dict[int, tuple[Decision, float] | BaseException]:
-        """Ask seats to act, at once; slow seats are left out of the result."""
+        """Ask seats to act, at once; slow seats are left out of the result.
+
+        On a tick, only people are held to `deadline`, and not on the first
+        tick: bots and AI players are always waited for. With a person
+        playing, the tick lasts at least `deadline`.
+        """
         contexts = {
             seat: TurnContext(
                 game=self.game,
@@ -300,10 +305,31 @@ class Match:
             return decision, loop.time() - started
 
         tasks = {seat: asyncio.create_task(ask(seat)) for seat in seats}
-        _, pending = await asyncio.wait(tasks.values(), timeout=deadline)
+        # A real-time game waits for each person's first move, so nobody loses
+        # before they have even seen the board.
+        first = self.turn == 0
+        clocked = {
+            seat: task
+            for seat, task in tasks.items()
+            if not ticking
+            or (isinstance(self.players[seat], HumanPlayer) and not first)
+        }
+        unclocked = [t for t in tasks.values() if t not in clocked.values()]
+        if clocked:
+            await asyncio.wait(clocked.values(), timeout=deadline)
+        if unclocked:
+            await asyncio.wait(unclocked)
+        if ticking and deadline is not None and clocked:
+            # With a person playing, a tick never ends early: a steady pace.
+            await asyncio.sleep(max(0.0, started + deadline - loop.time()))
+        pending = {task for task in tasks.values() if not task.done()}
         for seat, task in tasks.items():
             if task in pending:
-                self.players[seat].cancel()
+                player = self.players[seat]
+                if isinstance(player, HumanPlayer):
+                    player.timeout()
+                else:  # pragma: no cover - only people are left pending
+                    player.cancel()
                 task.cancel()
         for task in pending:
             with contextlib.suppress(asyncio.CancelledError):
