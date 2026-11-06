@@ -17,6 +17,7 @@ from pydantic_ai import (
 )
 from pydantic_ai.capabilities import ModelFallback
 from pydantic_ai.models import Model, infer_model
+from pydantic_ai.models.decision import DecisionModel
 
 from ludotastic.engine.game import ActionMode
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
@@ -71,8 +72,24 @@ class AIPlayer(Player):
             retries: How often an invalid or illegal action is sent back.
             request_limit: The most model requests a single turn may take.
             model_settings: Settings such as temperature, passed to every run.
+
+        Raises:
+            ValueError: If a decision model, which can only pick among options,
+                is asked to act in another mode without a fallback model.
         """
         self.model = model if isinstance(model, Model) else infer_model(model)
+        picks_only = isinstance(self.model, DecisionModel)
+        if (
+            picks_only
+            and mode not in {None, ActionMode.CHOICE}
+            and fallback_model is None
+        ):
+            msg = (
+                f"{self.model.model_name} is a decision model: it can only pick "
+                f"among options, so it needs the {ActionMode.CHOICE} mode, or a "
+                f"fallback model for the {mode} mode"
+            )
+            raise ValueError(msg)
         self.model_id = model if isinstance(model, str) else self.model.model_name
         super().__init__(name or self.model_id)
         self.mode = mode

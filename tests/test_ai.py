@@ -2,12 +2,19 @@
 
 import json
 import random
+from typing import override
 
 import pytest
 from pydantic_ai.messages import (
     ModelMessage,
     ModelResponse,
     ToolCallPart,
+)
+from pydantic_ai.models.decision import (
+    DecisionModel,
+    DecisionModelSettings,
+    DecisionRequest,
+    DecisionResponse,
 )
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.test import TestModel
@@ -115,3 +122,34 @@ async def test_forced_move_skips_the_model() -> None:
 def test_unknown_model() -> None:
     with pytest.raises(Exception, match="Unknown model"):
         AIPlayer("nope:nothing")
+
+
+class FakeDecider(DecisionModel):
+    """A decision model that never gets as far as deciding."""
+
+    @property
+    @override
+    def model_name(self) -> str:
+        return "fake-decider"
+
+    @property
+    @override
+    def system(self) -> str:
+        return "fake"
+
+    @override
+    async def decide(
+        self,
+        request: DecisionRequest,
+        model_settings: DecisionModelSettings,
+    ) -> DecisionResponse:  # pragma: no cover
+        raise AssertionError
+
+
+@pytest.mark.parametrize("mode", [ActionMode.STRUCTURED, ActionMode.TOOLS])
+def test_decision_models_need_choice_mode(mode: ActionMode) -> None:
+    with pytest.raises(ValueError, match="decision model"):
+        AIPlayer(FakeDecider(), mode=mode)
+    assert AIPlayer(FakeDecider(), mode=mode, fallback_model="test").mode is mode
+    assert AIPlayer(FakeDecider(), mode=ActionMode.CHOICE).mode is ActionMode.CHOICE
+    assert AIPlayer(FakeDecider()).mode is None
