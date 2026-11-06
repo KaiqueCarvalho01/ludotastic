@@ -28,7 +28,7 @@ from ludotastic.games.tictactoe import Place, TicTacToe, TicTacToeState
 def ctx(board: str = ".........") -> TurnContext:
     game = TicTacToe()
     state = TicTacToeState(
-        board=tuple(None if c == "." else c for c in board)  # ty: ignore[invalid-argument-type]
+        board=tuple(None if c == "." else c for c in board)  # type: ignore[ty:invalid-argument-type]
     )
     (player,) = game.to_move(state)
     return TurnContext(
@@ -59,7 +59,7 @@ async def test_choice_mode_picks_a_described_move() -> None:
     assert decision.usage is not None
     assert decision.usage.requests == 1
     assert decision.usage.tokens > 0
-    options = seen["schema"]["properties"]["response"]["anyOf"]  # ty: ignore[not-subscriptable]
+    options = seen["schema"]["properties"]["response"]["anyOf"]  # type: ignore[ty:not-subscriptable]
     assert {
         "const": "4",
         "description": "Place your mark in the center (cell 4).",

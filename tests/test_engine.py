@@ -195,7 +195,7 @@ def test_registry_register() -> None:
     with pytest.raises(ValueError, match="taken"):
         games.register(Impostor)
     with pytest.raises(TypeError):
-        games.register(int)  # ty: ignore[invalid-argument-type]
+        games.register(int)  # type: ignore[ty:invalid-argument-type]
 
 
 def test_registry_reports_broken_entry_points(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -298,7 +298,7 @@ async def test_tick_game_and_delay() -> None:
     outcome = await match.run()
     assert outcome is not None
     assert outcome.scores == (1.0, 0.0)
-    assert match.state.positions == (3, 0)  # ty: ignore[unresolved-attribute]
+    assert match.state.positions == (3, 0)  # type: ignore[ty:unresolved-attribute]
 
 
 class Slowpoke(Player):
@@ -353,7 +353,7 @@ async def test_human_player() -> None:
     match.players[1] = HumanPlayer()
     with pytest.raises(ValueError, match="not seat 1"):
         match.submit(1, Place(cell=0))
-    assert match.state.board[4] == "X"  # ty: ignore[unresolved-attribute]
+    assert match.state.board[4] == "X"  # type: ignore[ty:unresolved-attribute]
     match.abort("bye")
     match.abort("twice")
     assert await task is None

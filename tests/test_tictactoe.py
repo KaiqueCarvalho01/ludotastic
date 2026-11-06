@@ -16,7 +16,7 @@ from ludotastic.games.tictactoe import MinimaxBot, Place, TicTacToe, TicTacToeSt
 def board(text: str) -> TicTacToeState:
     """Build a state from nine characters, `.` for empty."""
     return TicTacToeState(
-        board=tuple(None if c == "." else c for c in text)  # ty: ignore[invalid-argument-type]
+        board=tuple(None if c == "." else c for c in text)  # type: ignore[ty:invalid-argument-type]
     )
 
 

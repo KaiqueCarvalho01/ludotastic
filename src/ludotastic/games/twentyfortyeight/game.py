@@ -48,7 +48,7 @@ type Row = tuple[Tile, Tile, Tile, Tile]
 type Board = tuple[Row, Row, Row, Row]
 """Rows top to bottom."""
 
-EMPTY: Final[Board] = ((0,) * SIZE,) * SIZE  # ty: ignore[invalid-assignment]
+EMPTY: Final[Board] = ((0,) * SIZE,) * SIZE  # type: ignore[ty:invalid-assignment]
 
 
 class Direction(StrEnum):
@@ -122,11 +122,11 @@ def merge_line(
 
 
 def _transpose(board: Board) -> Board:
-    return tuple(zip(*board, strict=True))  # ty: ignore[invalid-return-type]
+    return tuple(zip(*board, strict=True))  # type: ignore[ty:invalid-return-type]
 
 
 def _flip(board: Board) -> Board:
-    return tuple(row[::-1] for row in board)  # ty: ignore[invalid-return-type]
+    return tuple(row[::-1] for row in board)  # type: ignore[ty:invalid-return-type]
 
 
 def slide(board: Board, direction: Direction) -> tuple[Board, Count, list[Tile]]:
@@ -153,7 +153,7 @@ def slide(board: Board, direction: Direction) -> tuple[Board, Count, list[Tile]]
         rows.append(line)
         points += scored
         made += tiles
-    result: Board = tuple(rows)  # ty: ignore[invalid-assignment]
+    result: Board = tuple(rows)  # type: ignore[ty:invalid-assignment]
     back = {
         Direction.LEFT: result,
         Direction.RIGHT: _flip(result),
@@ -172,7 +172,7 @@ def spawn(board: Board, rng: random.Random) -> Board:
     tile = 4 if rng.random() < FOUR_CHANCE else 2
     rows = [list(row) for row in board]
     rows[r][c] = tile
-    return tuple(tuple(row) for row in rows)  # ty: ignore[invalid-return-type]
+    return tuple(tuple(row) for row in rows)  # type: ignore[ty:invalid-return-type]
 
 
 def in_corner(board: Board) -> bool:

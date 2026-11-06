@@ -26,7 +26,7 @@ def state(
     food: tuple[int, int] | None = (9, 9),
     **kwargs: object,
 ) -> SnakeState:
-    return SnakeState(body=body, heading=heading, food=food, **kwargs)  # ty: ignore[invalid-argument-type]
+    return SnakeState(body=body, heading=heading, food=food, **kwargs)  # type: ignore[ty:invalid-argument-type]
 
 
 def test_initial_state() -> None:

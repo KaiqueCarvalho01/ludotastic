@@ -126,7 +126,7 @@ async def test_generic_renderer(user: User, service: MatchService) -> None:
         if match.history:
             break
         await asyncio.sleep(0.01)
-    assert match.state.board[4] == "X"  # ty: ignore[unresolved-attribute]
+    assert match.state.board[4] == "X"  # type: ignore[ty:unresolved-attribute]
 
 
 async def test_create_app_serves_ui_and_api(service: MatchService) -> None:

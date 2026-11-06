@@ -29,7 +29,7 @@ GAME: Final = TwentyFortyEight()
 
 def board(*rows: str) -> Board:
     """Build a board from four rows of four space-separated numbers."""
-    return tuple(tuple(int(n) for n in row.split()) for row in rows)  # ty: ignore[invalid-return-type]
+    return tuple(tuple(int(n) for n in row.split()) for row in rows)  # type: ignore[ty:invalid-return-type]
 
 
 def state(*rows: str, score: int = 0) -> TwentyFortyEightState:
@@ -180,7 +180,7 @@ async def test_play_with_the_keyboard(user: User, service: MatchService) -> None
     await asyncio.sleep(0.05)
     assert not match.history
     await user.should_not_see("Illegal action")
-    legal = GAME.legal_actions(match.state, 0)  # ty: ignore[invalid-argument-type]
+    legal = GAME.legal_actions(match.state, 0)  # type: ignore[ty:invalid-argument-type]
     key = {
         d: k
         for k, d in {

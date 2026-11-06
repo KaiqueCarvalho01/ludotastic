@@ -66,7 +66,7 @@ async def test_match_usage_per_seat(service: MatchService) -> None:
     await match.run()
     x_moves = sum(m.seat == 0 for m in match.history)
     assert match.usage(0).requests == x_moves
-    assert match.usage(0).cost == PRICED.cost * x_moves  # ty: ignore[unsupported-operator]
+    assert match.usage(0).cost == PRICED.cost * x_moves  # type: ignore[ty:unsupported-operator]
     assert match.usage(1) == Usage()
     assert match.usage() == match.usage(0)
 
@@ -97,7 +97,7 @@ async def test_meter_on_the_match_page(user: User, service: MatchService) -> Non
     service.matches[match.id] = match
     await match.run()
     await user.open(f"/match/{match.id}")
-    costs = sorted(label.text for label in user.find(marker="cost").elements)  # ty: ignore[unresolved-attribute]
+    costs = sorted(label.text for label in user.find(marker="cost").elements)  # type: ignore[ty:unresolved-attribute]
     total = match.usage()
     # Seat a is priced, seat b is not, so the total is a lower bound.
     assert costs == sorted(

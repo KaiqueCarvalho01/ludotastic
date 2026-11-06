@@ -297,7 +297,7 @@ def _score(board: Board) -> int:
 
 
 def _place(board: Board, cell: CellIndex, mark: Mark) -> Board:
-    return (*board[:cell], mark, *board[cell + 1 :])  # ty: ignore[invalid-return-type]
+    return (*board[:cell], mark, *board[cell + 1 :])  # type: ignore[ty:invalid-return-type]
 
 
 class MinimaxBot(Player):
