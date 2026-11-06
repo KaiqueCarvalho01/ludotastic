@@ -40,6 +40,7 @@ ludotastic = "ludotastic.cli:main"
 # Games are plugins: any installed package can add one to this group.
 # The bundled games register here exactly like third-party ones.
 [project.entry-points."ludotastic.games"]
+2048 = "ludotastic.games.twentyfortyeight:TwentyFortyEight"
 snake = "ludotastic.games.snake:Snake"
 tictactoe = "ludotastic.games.tictactoe:TicTacToe"
 
