@@ -21,6 +21,7 @@ from pydantic import BaseModel
 
 from ludotastic.engine.game import Game
 from ludotastic.engine.usage import Usage
+from ludotastic.types import Count, Seat
 
 
 class PlayerKind(StrEnum):
@@ -39,11 +40,11 @@ class TurnContext:
     """The game being played."""
     state: BaseModel
     """The current state."""
-    player: int
+    player: Seat
     """The seat that has to act."""
     legal_actions: Sequence[BaseModel]
     """Every action the seat may take."""
-    turn: int
+    turn: Count
     """The number of turns played so far."""
     rng: random.Random
     """A random source, seeded per match for reproducible bots."""

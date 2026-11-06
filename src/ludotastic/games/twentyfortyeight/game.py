@@ -12,13 +12,15 @@ import random
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from itertools import pairwise
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Annotated, Final, override
 
+from annotated_types import Ge, Predicate
 from pydantic import BaseModel, ConfigDict
 
 from ludotastic.engine.drawing import Canvas
 from ludotastic.engine.game import ActionMode, BotFactory, Game, GameInfo, Outcome
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
+from ludotastic.types import Count, Seat
 
 if TYPE_CHECKING:
     from ludotastic.engine.render import Renderer
@@ -28,9 +30,23 @@ GOAL: Final = 2048
 FOUR_CHANCE: Final = 0.1
 """How often a new tile is a 4 rather than a 2."""
 
-type Row = tuple[int, int, int, int]
+
+def _is_tile(value: int) -> bool:
+    """Whether a value can sit on the board: 0, or a power of two from 2 up.
+
+    Examples:
+        >>> [n for n in range(10) if _is_tile(n)]
+        [0, 2, 4, 8]
+    """
+    return value == 0 or (value >= 2 and value & (value - 1) == 0)  # noqa: PLR2004
+
+
+type Tile = Annotated[int, Ge(0), Predicate(_is_tile)]
+"""A tile's number: 0 for an empty cell, otherwise a power of two from 2 up."""
+
+type Row = tuple[Tile, Tile, Tile, Tile]
 type Board = tuple[Row, Row, Row, Row]
-"""Rows top to bottom; 0 is an empty cell."""
+"""Rows top to bottom."""
 
 EMPTY: Final[Board] = ((0,) * SIZE,) * SIZE  # ty: ignore[invalid-assignment]
 
@@ -50,17 +66,17 @@ class TwentyFortyEightState(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     board: Board = EMPTY
-    score: int = 0
+    score: Count = 0
     """The sum of every merged tile so far."""
-    moves: int = 0
+    moves: Count = 0
 
     @property
-    def best(self) -> int:
+    def best(self) -> Tile:
         """The largest tile."""
         return max(max(row) for row in self.board)
 
     @property
-    def empty(self) -> int:
+    def empty(self) -> Count:
         """How many cells are free."""
         return sum(cell == 0 for row in self.board for cell in row)
 
@@ -74,7 +90,9 @@ class Slide(BaseModel):
     """Which way the tiles slide: up, down, left or right."""
 
 
-def merge_line(line: Sequence[int]) -> tuple[tuple[int, ...], int, list[int]]:
+def merge_line(
+    line: Sequence[Tile],
+) -> tuple[tuple[Tile, ...], Count, list[Tile]]:
     """Slide one line towards its start, merging equal neighbours once.
 
     Returns the new line, the points scored, and the tiles the merges made.
@@ -88,8 +106,8 @@ def merge_line(line: Sequence[int]) -> tuple[tuple[int, ...], int, list[int]]:
         ((4, 0, 0, 0), 4, [4])
     """
     tiles = [tile for tile in line if tile]
-    merged: list[int] = []
-    made: list[int] = []
+    merged: list[Tile] = []
+    made: list[Tile] = []
     i = 0
     while i < len(tiles):
         if i + 1 < len(tiles) and tiles[i] == tiles[i + 1]:
@@ -111,7 +129,7 @@ def _flip(board: Board) -> Board:
     return tuple(row[::-1] for row in board)  # ty: ignore[invalid-return-type]
 
 
-def slide(board: Board, direction: Direction) -> tuple[Board, int, list[int]]:
+def slide(board: Board, direction: Direction) -> tuple[Board, Count, list[Tile]]:
     """Slide a whole board; returns the board, points scored and tiles made.
 
     Examples:
@@ -129,7 +147,7 @@ def slide(board: Board, direction: Direction) -> tuple[Board, int, list[int]]:
     }[direction]
     rows: list[tuple[int, ...]] = []
     points = 0
-    made: list[int] = []
+    made: list[Tile] = []
     for row in turned:
         line, scored, tiles = merge_line(row)
         rows.append(line)
@@ -260,12 +278,12 @@ class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
         return TwentyFortyEightState(board=spawn(spawn(EMPTY, rng), rng))
 
     @override
-    def to_move(self, state: TwentyFortyEightState) -> Sequence[int]:
+    def to_move(self, state: TwentyFortyEightState) -> Sequence[Seat]:
         return (0,)
 
     @override
     def legal_actions(
-        self, state: TwentyFortyEightState, player: int
+        self, state: TwentyFortyEightState, player: Seat
     ) -> Sequence[Slide]:
         """The directions that change the board."""
         return tuple(
@@ -308,7 +326,7 @@ class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
         )
 
     @override
-    def observe(self, state: TwentyFortyEightState, player: int) -> str:
+    def observe(self, state: TwentyFortyEightState, player: Seat) -> str:
         """The board, plus the numbers a player needs."""
         corner = "is" if in_corner(state.board) else "is not"
         return (
@@ -319,12 +337,12 @@ class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
         )
 
     @override
-    def snapshot(self, state: TwentyFortyEightState, player: int) -> bytes:
+    def snapshot(self, state: TwentyFortyEightState, player: Seat) -> bytes:
         """The tiles as a picture, in the original game's colors."""
         return draw_board(state.board)
 
     @override
-    def brief(self, state: TwentyFortyEightState, player: int) -> str:
+    def brief(self, state: TwentyFortyEightState, player: Seat) -> str:
         """The score and best tile; the picture shows the tiles."""
         return (
             f"Score: {state.score}. Moves: {state.moves}. Best tile: {state.best}. "
@@ -343,7 +361,7 @@ class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
 
     @override
     def describe_option(
-        self, state: TwentyFortyEightState, player: int, action: Slide
+        self, state: TwentyFortyEightState, player: Seat, action: Slide
     ) -> str:
         """What sliding this way does, as facts.
 
@@ -388,7 +406,7 @@ class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
         return str(action.direction)
 
     @override
-    def player_label(self, player: int) -> str:
+    def player_label(self, player: Seat) -> str:
         return "Player"
 
     @override

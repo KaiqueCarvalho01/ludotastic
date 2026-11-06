@@ -11,6 +11,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from ludotastic.types import Count
+
 
 class Usage(BaseModel):
     """Model usage, for one move or added up over many.
@@ -23,16 +25,16 @@ class Usage(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    requests: int = 0
-    input_tokens: int = 0
-    output_tokens: int = 0
+    requests: Count = 0
+    input_tokens: Count = 0
+    output_tokens: Count = 0
     cost: Decimal | None = None
     """Estimated cost in US dollars, or `None` if no price is known."""
     priced: bool = True
     """Whether every request counted has a known price."""
 
     @property
-    def tokens(self) -> int:
+    def tokens(self) -> Count:
         """Input and output tokens together."""
         return self.input_tokens + self.output_tokens
 
@@ -106,7 +108,7 @@ def format_cost(cost: Decimal | None, *, priced: bool = True) -> str:
     return text if priced else f"≥ {text}"
 
 
-def format_tokens(tokens: int) -> str:
+def format_tokens(tokens: Count) -> str:
     """Show a token count compactly.
 
     Examples:

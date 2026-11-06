@@ -9,13 +9,16 @@ import io
 
 from PIL import Image, ImageDraw, ImageFont
 
-type Color = str | tuple[int, int, int]
+from ludotastic.types import Byte, Pixels
+
+type Color = str | tuple[Byte, Byte, Byte]
+"""A color: a name or `#rrggbb` that Pillow knows, or red, green and blue."""
 
 
 class Canvas:
     """A white picture to draw a game on, with a few helpers."""
 
-    def __init__(self, width: int, height: int) -> None:
+    def __init__(self, width: Pixels, height: Pixels) -> None:
         """Start a blank picture.
 
         Image-reading models such as Jev take 280 to 1568 pixels a side.
@@ -28,7 +31,7 @@ class Canvas:
         xy: tuple[float, float],
         text: str,
         *,
-        size: int,
+        size: Pixels,
         fill: Color = "black",
     ) -> None:
         """Write text centered on a point.

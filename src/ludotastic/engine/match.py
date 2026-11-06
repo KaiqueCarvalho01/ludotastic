@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from ludotastic.engine.game import Game, Outcome, Timing
 from ludotastic.engine.players import Decision, HumanPlayer, Player, TurnContext
 from ludotastic.engine.usage import Usage
+from ludotastic.types import Count, NonNegativeFloat, Seat
 
 
 class MatchStatus(StrEnum):
@@ -36,7 +37,7 @@ class MatchStatus(StrEnum):
 class SeatInfo(BaseModel):
     """Who sits in a seat."""
 
-    seat: int
+    seat: Seat
     label: str
     """The game's name for the seat, such as `X`."""
     player: str
@@ -50,11 +51,11 @@ class SeatInfo(BaseModel):
 class MoveRecord(BaseModel):
     """One action in a match's history."""
 
-    turn: int
-    seat: int
+    turn: Count
+    seat: Seat
     action: dict[str, Any]
     description: str
-    seconds: float
+    seconds: NonNegativeFloat
     """How long the player took."""
     details: dict[str, Any] = Field(default_factory=dict)
     """Whatever the player reported, such as model usage."""

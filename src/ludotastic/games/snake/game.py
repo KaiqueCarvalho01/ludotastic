@@ -12,8 +12,9 @@ import random
 from collections import deque
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Annotated, Final, override
 
+from annotated_types import Ge
 from pydantic import BaseModel, ConfigDict
 
 from ludotastic.engine.drawing import Canvas
@@ -26,6 +27,7 @@ from ludotastic.engine.game import (
     Timing,
 )
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
+from ludotastic.types import Count, PositiveInt, Seat
 
 if TYPE_CHECKING:
     from ludotastic.engine.render import Renderer
@@ -36,8 +38,15 @@ START_LENGTH: Final = 3
 MAX_IDLE: Final = 6 * WIDTH * HEIGHT
 """Ticks without eating after which the game ends, so a looping snake stops."""
 
-type Cell = tuple[int, int]
-"""A cell as `(x, y)`, with `(0, 0)` at the top left."""
+type Coordinate = Annotated[int, Ge(0)]
+"""A column or row number, counting from 0 at the top left."""
+
+type Cell = tuple[Coordinate, Coordinate]
+"""A cell as `(x, y)`, with `(0, 0)` at the top left.
+
+Neighbours of edge cells can fall off the board, so `step` can return
+negative coordinates; `SnakeState.inside` tells them apart.
+"""
 
 
 class Direction(StrEnum):
@@ -88,18 +97,18 @@ class SnakeState(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    width: int = WIDTH
-    height: int = HEIGHT
+    width: PositiveInt = WIDTH
+    height: PositiveInt = HEIGHT
     body: tuple[Cell, ...]
     """The snake, head first."""
     heading: Direction
     """The direction the snake last moved in."""
     food: Cell | None
     """Where the food is; `None` once the board is full."""
-    score: int = 0
+    score: Count = 0
     """Food eaten so far."""
-    ticks: int = 0
-    idle: int = 0
+    ticks: Count = 0
+    idle: Count = 0
     """Ticks since the snake last ate."""
     crashed: str | None = None
     """What the snake ran into, once it has."""
@@ -151,7 +160,7 @@ def blocked_after(state: SnakeState, direction: Direction) -> str | None:
     return None
 
 
-def reachable(state: SnakeState, start: Cell, blocked: Iterable[Cell]) -> int:
+def reachable(state: SnakeState, start: Cell, blocked: Iterable[Cell]) -> Count:
     """How many cells can be reached from `start`, avoiding `blocked`."""
     walls = set(blocked)
     seen = {start}
@@ -166,7 +175,7 @@ def reachable(state: SnakeState, start: Cell, blocked: Iterable[Cell]) -> int:
     return len(seen)
 
 
-def distance(a: Cell, b: Cell) -> int:
+def distance(a: Cell, b: Cell) -> Count:
     """Steps between two cells, ignoring obstacles.
 
     Examples:
@@ -284,11 +293,11 @@ class Snake(Game[SnakeState, Turn]):
         return state.model_copy(update={"food": place_food(state, rng)})
 
     @override
-    def to_move(self, state: SnakeState) -> Sequence[int]:
+    def to_move(self, state: SnakeState) -> Sequence[Seat]:
         return (0,)
 
     @override
-    def legal_actions(self, state: SnakeState, player: int) -> Sequence[Turn]:
+    def legal_actions(self, state: SnakeState, player: Seat) -> Sequence[Turn]:
         """Any direction but straight back."""
         if state.crashed is not None:
             return ()
@@ -297,7 +306,7 @@ class Snake(Game[SnakeState, Turn]):
         )
 
     @override
-    def default_action(self, state: SnakeState, player: int) -> Turn:
+    def default_action(self, state: SnakeState, player: Seat) -> Turn:
         """Too slow: keep going the same way."""
         return Turn(direction=state.heading)
 
@@ -364,7 +373,7 @@ class Snake(Game[SnakeState, Turn]):
         )
 
     @override
-    def observe(self, state: SnakeState, player: int) -> str:
+    def observe(self, state: SnakeState, player: Seat) -> str:
         """The grid, plus the facts a player needs about it."""
         hx, hy = state.head
         food = (
@@ -383,12 +392,12 @@ class Snake(Game[SnakeState, Turn]):
         )
 
     @override
-    def snapshot(self, state: SnakeState, player: int) -> bytes:
+    def snapshot(self, state: SnakeState, player: Seat) -> bytes:
         """The board as a picture, as it looks in the playground."""
         return draw_board(state)
 
     @override
-    def brief(self, state: SnakeState, player: int) -> str:
+    def brief(self, state: SnakeState, player: Seat) -> str:
         """The score and heading; the picture shows the board."""
         return (
             f"Score: {state.score}. The snake is {len(state.body)} cells long and "
@@ -407,7 +416,7 @@ class Snake(Game[SnakeState, Turn]):
         return f"Move {action.direction}."
 
     @override
-    def describe_option(self, state: SnakeState, player: int, action: Turn) -> str:
+    def describe_option(self, state: SnakeState, player: Seat, action: Turn) -> str:
         """What moving this way leads to, as facts.
 
         Examples:
@@ -451,7 +460,7 @@ class Snake(Game[SnakeState, Turn]):
         return str(action.direction)
 
     @override
-    def player_label(self, player: int) -> str:
+    def player_label(self, player: Seat) -> str:
         return "Snake"
 
     @override

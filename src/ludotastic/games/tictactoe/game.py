@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict
 from ludotastic.engine.drawing import Canvas
 from ludotastic.engine.game import ActionMode, BotFactory, Game, GameInfo, Outcome
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
+from ludotastic.types import Seat
 
 if TYPE_CHECKING:
     from ludotastic.engine.render import Renderer
@@ -26,6 +27,9 @@ if TYPE_CHECKING:
 type Mark = Literal["X", "O"]
 type Cell = Mark | None
 type Board = tuple[Cell, Cell, Cell, Cell, Cell, Cell, Cell, Cell, Cell]
+
+type CellIndex = Annotated[int, Interval(ge=0, le=8)]
+"""A cell's number: 0 is top left, 4 the center, 8 bottom right."""
 
 MARKS: Final[tuple[Mark, Mark]] = ("X", "O")
 LINES: Final = (
@@ -61,12 +65,14 @@ class Place(BaseModel):
 
     model_config = ConfigDict(frozen=True, use_attribute_docstrings=True)
 
+    # Spelled out rather than `CellIndex`, so the model gets the bounds inline,
+    # not behind a `$ref`.
     cell: Annotated[int, Interval(ge=0, le=8)]
     """The cell to mark: 0 is top left, 1 top center, 2 top right, 3 middle left,
     4 center, 5 middle right, 6 bottom left, 7 bottom center, 8 bottom right."""
 
 
-def cell_name(cell: int) -> str:
+def cell_name(cell: CellIndex) -> str:
     """Name a cell in words.
 
     Examples:
@@ -167,12 +173,12 @@ class TicTacToe(Game[TicTacToeState, Place]):
         return TicTacToeState()
 
     @override
-    def to_move(self, state: TicTacToeState) -> Sequence[int]:
+    def to_move(self, state: TicTacToeState) -> Sequence[Seat]:
         """X (seat 0) and O (seat 1) alternate."""
         return (MARKS.index(state.next_mark),)
 
     @override
-    def legal_actions(self, state: TicTacToeState, player: int) -> Sequence[Place]:
+    def legal_actions(self, state: TicTacToeState, player: Seat) -> Sequence[Place]:
         """Any empty cell, on your turn."""
         if self.outcome(state) is not None or MARKS[player] != state.next_mark:
             return ()
@@ -203,7 +209,7 @@ class TicTacToe(Game[TicTacToeState, Place]):
         return None
 
     @override
-    def observe(self, state: TicTacToeState, player: int) -> str:
+    def observe(self, state: TicTacToeState, player: Seat) -> str:
         """The board, with empty cells numbered.
 
         This ASCII layout is deliberately kept as is, so results stay comparable.
@@ -227,12 +233,12 @@ class TicTacToe(Game[TicTacToeState, Place]):
         )
 
     @override
-    def snapshot(self, state: TicTacToeState, player: int) -> bytes:
+    def snapshot(self, state: TicTacToeState, player: Seat) -> bytes:
         """The board as a picture: X in blue, O in red, empty cells numbered."""
         return draw_board(state.board)
 
     @override
-    def brief(self, state: TicTacToeState, player: int) -> str:
+    def brief(self, state: TicTacToeState, player: Seat) -> str:
         """Who is who, and whose turn it is; the picture shows the board."""
         mark, other = MARKS[player], MARKS[1 - player]
         return (
@@ -261,7 +267,7 @@ class TicTacToe(Game[TicTacToeState, Place]):
         return str(action.cell)
 
     @override
-    def player_label(self, player: int) -> str:
+    def player_label(self, player: Seat) -> str:
         """`X` or `O`."""
         return MARKS[player]
 
@@ -290,7 +296,7 @@ def _score(board: Board) -> int:
     return max(-_score(_place(board, i, to_move)) for i in empty)
 
 
-def _place(board: Board, cell: int, mark: Mark) -> Board:
+def _place(board: Board, cell: CellIndex, mark: Mark) -> Board:
     return (*board[:cell], mark, *board[cell + 1 :])  # ty: ignore[invalid-return-type]
 
 

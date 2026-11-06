@@ -216,3 +216,10 @@ async def test_turn_limit_keeps_the_score() -> None:
     state = match.state
     assert isinstance(state, SnakeState)
     assert outcome.scores == (float(state.score),)
+
+
+def test_cells_are_on_the_board() -> None:
+    from pydantic import ValidationError  # noqa: PLC0415
+
+    with pytest.raises(ValidationError):
+        SnakeState(body=((-1, 0),), heading=Direction.LEFT, food=(1, 1))

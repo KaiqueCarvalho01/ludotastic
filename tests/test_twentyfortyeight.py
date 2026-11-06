@@ -198,3 +198,13 @@ async def test_play_with_the_keyboard(user: User, service: MatchService) -> None
     assert match.history[0].action == {"direction": str(legal[0].direction)}
     match.abort("done")
     await user.should_not_see("Arrow keys or WASD to slide")
+
+
+@pytest.mark.parametrize("tile", [3, 1, -2, 6])
+def test_boards_only_hold_powers_of_two(tile: int) -> None:
+    from pydantic import ValidationError  # noqa: PLC0415
+
+    with pytest.raises(ValidationError):
+        TwentyFortyEightState.model_validate(
+            {"board": [[tile, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]}
+        )

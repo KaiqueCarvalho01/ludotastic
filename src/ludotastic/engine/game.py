@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, cast
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
 
-from ludotastic.types import PositiveFloat, PositiveInt
+from ludotastic.types import PositiveFloat, PositiveInt, Seat
 
 if TYPE_CHECKING:
     from pydantic_ai import Tool
@@ -222,11 +222,11 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         """Build the state a match starts in."""
 
     @abstractmethod
-    def to_move(self, state: S) -> Sequence[int]:
+    def to_move(self, state: S) -> Sequence[Seat]:
         """The players that act next; several for simultaneous moves."""
 
     @abstractmethod
-    def legal_actions(self, state: S, player: int) -> Sequence[A]:
+    def legal_actions(self, state: S, player: Seat) -> Sequence[A]:
         """Every action `player` may take in `state`."""
 
     @abstractmethod
@@ -250,7 +250,7 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         return Outcome.draw(self.num_players, "Turn limit reached")
 
     @abstractmethod
-    def observe(self, state: S, player: int) -> str:
+    def observe(self, state: S, player: Seat) -> str:
         """Describe `state` in text, as `player` sees it.
 
         This is the prompt an AI player gets, so it should hold everything the
@@ -261,7 +261,7 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         """Describe an action in words, for people and AI players alike."""
         return self.action_key(action)
 
-    def describe_option(self, state: S, player: int, action: A) -> str:
+    def describe_option(self, state: S, player: Seat, action: A) -> str:
         """Describe a legal action as an option for an AI player to pick.
 
         Defaults to [`describe_action`][ludotastic.Game.describe_action]. Games
@@ -280,18 +280,18 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         """Validate raw data, such as JSON from the API, into an action."""
         return cast("A", self.action_type.model_validate(data))
 
-    def is_legal(self, state: S, player: int, action: A) -> bool:
+    def is_legal(self, state: S, player: Seat, action: A) -> bool:
         """Whether `player` may take `action` in `state`."""
         return action in self.legal_actions(state, player)
 
-    def default_action(self, state: S, player: int) -> A | None:  # noqa: ARG002
+    def default_action(self, state: S, player: Seat) -> A | None:  # noqa: ARG002
         """The action taken for a player that was too slow on a tick.
 
         Returning `None` means the player simply does not act this tick.
         """
         return None
 
-    def player_label(self, player: int) -> str:
+    def player_label(self, player: Seat) -> str:
         """A short name for a seat, such as `X` or `Black`."""
         return f"Player {player + 1}"
 
@@ -303,7 +303,7 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         bots: dict[str, BotFactory] = {}
         return bots
 
-    def ai_tools(self, state: S, player: int) -> Sequence[Tool[Any]]:  # noqa: ARG002
+    def ai_tools(self, state: S, player: Seat) -> Sequence[Tool[Any]]:  # noqa: ARG002
         """Extra tools offered to AI players in the `tools` action mode.
 
         The engine already offers tools to observe the game and list the legal
@@ -311,7 +311,7 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         """
         return ()
 
-    def snapshot(self, state: S, player: int) -> bytes | None:  # noqa: ARG002
+    def snapshot(self, state: S, player: Seat) -> bytes | None:  # noqa: ARG002
         """A PNG picture of `state` as `player` sees it, for AI players.
 
         `None` means the game cannot draw itself, so only the
@@ -325,7 +325,7 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         """Whether the game draws pictures, for the image view."""
         return type(self).snapshot is not Game.snapshot
 
-    def brief(self, state: S, player: int) -> str:
+    def brief(self, state: S, player: Seat) -> str:
         """The text that goes along with a picture of `state`.
 
         Defaults to naming the seat. Override it to add what the picture
