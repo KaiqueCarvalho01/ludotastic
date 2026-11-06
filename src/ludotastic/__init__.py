@@ -22,6 +22,7 @@ __all__ = [
     "Settings",
     "Timing",
     "TurnContext",
+    "View",
     "get_settings",
     "registry",
 ]
@@ -47,6 +48,7 @@ from .engine import (
     SeatInfo,
     Timing,
     TurnContext,
+    View,
     registry,
 )
 from .settings import Settings, get_settings

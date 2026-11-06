@@ -6,7 +6,7 @@ from typing import Any
 
 from nicegui import ui
 
-from ludotastic.engine.game import Game
+from ludotastic.engine.game import Game, View
 from ludotastic.engine.players import PlayerKind
 from ludotastic.engine.usage import Usage, format_cost
 from ludotastic.service import (
@@ -117,6 +117,17 @@ class _SeatForm:
                 self.mode = ui.select(
                     {"": "Game default", **modes}, value="", label="Action mode"
                 ).classes("w-full")
+                views = {
+                    View.TEXT: "Text",
+                    View.IMAGE: "Picture",
+                    View.BOTH: "Text and picture",
+                }
+                self.view = (
+                    ui.select(views, value=View.TEXT, label="What the AI sees")
+                    .classes("w-full")
+                    .mark(f"view-{seat}")
+                )
+                self.view.set_visibility(game.can_draw)
                 self.fallback = ui.select(
                     ["", *settings.suggested_models],
                     value="",
@@ -141,6 +152,7 @@ class _SeatForm:
                     mode=self.mode.value or None,
                     fallback_model=self.fallback.value or None,
                     instructions=self.instructions.value or None,
+                    view=self.view.value,
                 )
 
 

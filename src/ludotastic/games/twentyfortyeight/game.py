@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, ConfigDict
 
+from ludotastic.engine.drawing import Canvas
 from ludotastic.engine.game import ActionMode, BotFactory, Game, GameInfo, Outcome
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
 
@@ -184,6 +185,8 @@ def render_board(board: Board) -> str:
     )
 
 
+TILE = 110
+GAP = 12
 # Background and text colors per tile, after the original game.
 TILE_COLORS = {
     0: ("#cdc1b4", "#776e65"),
@@ -200,6 +203,31 @@ TILE_COLORS = {
     2048: ("#edc22e", "#f9f6f2"),
 }
 BIG_TILE = ("#3c3a32", "#f9f6f2")
+
+
+def draw_board(board: Board) -> bytes:
+    """Draw the tiles as a PNG, the way they look in the playground.
+
+    Examples:
+        >>> draw_board(EMPTY)[1:4]
+        b'PNG'
+    """
+    side = SIZE * TILE + (SIZE + 1) * GAP
+    canvas = Canvas(side, side)
+    canvas.draw.rounded_rectangle((0, 0, side, side), radius=16, fill="#bbada0")
+    for r, row in enumerate(board):
+        for c, tile in enumerate(row):
+            x, y = GAP + c * (TILE + GAP), GAP + r * (TILE + GAP)
+            background, color = TILE_COLORS.get(tile, BIG_TILE)
+            canvas.draw.rounded_rectangle(
+                (x, y, x + TILE, y + TILE), radius=10, fill=background
+            )
+            if tile:
+                size = 52 if tile < 100 else 42 if tile < 1000 else 34  # noqa: PLR2004
+                canvas.text(
+                    (x + TILE / 2, y + TILE / 2), str(tile), size=size, fill=color
+                )
+    return canvas.png()
 
 
 class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
@@ -288,6 +316,19 @@ class TwentyFortyEight(Game[TwentyFortyEightState, Slide]):
             f"which {corner} in a corner. Empty cells: {state.empty}.\n"
             "Board (rows top to bottom, . is empty):\n"
             f"{render_board(state.board)}"
+        )
+
+    @override
+    def snapshot(self, state: TwentyFortyEightState, player: int) -> bytes:
+        """The tiles as a picture, in the original game's colors."""
+        return draw_board(state.board)
+
+    @override
+    def brief(self, state: TwentyFortyEightState, player: int) -> str:
+        """The score and best tile; the picture shows the tiles."""
+        return (
+            f"Score: {state.score}. Moves: {state.moves}. Best tile: {state.best}. "
+            "The picture shows the board."
         )
 
     @override

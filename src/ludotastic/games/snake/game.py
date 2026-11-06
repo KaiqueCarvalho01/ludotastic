@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, ConfigDict
 
+from ludotastic.engine.drawing import Canvas
 from ludotastic.engine.game import (
     ActionMode,
     BotFactory,
@@ -206,6 +207,42 @@ def render_grid(state: SnakeState) -> str:
     return "\n".join(rows)
 
 
+PIXELS = 40
+"""Side of one cell in the board picture."""
+
+
+def draw_board(state: SnakeState) -> bytes:
+    """Draw the board as a PNG, the way it looks in the playground.
+
+    Examples:
+        >>> state = SnakeState(body=((1, 1),), heading=Direction.RIGHT, food=(3, 3))
+        >>> draw_board(state)[1:4]
+        b'PNG'
+    """
+    canvas = Canvas(state.width * PIXELS, state.height * PIXELS)
+    body = set(state.body[1:])
+    for y in range(state.height):
+        for x in range(state.width):
+            box = (
+                x * PIXELS + 2,
+                y * PIXELS + 2,
+                (x + 1) * PIXELS - 2,
+                (y + 1) * PIXELS - 2,
+            )
+            if (x, y) == state.head:
+                canvas.draw.rounded_rectangle(box, radius=8, fill=(4, 120, 87))
+            elif (x, y) in body:
+                canvas.draw.rounded_rectangle(box, radius=4, fill=(52, 211, 153))
+            else:
+                canvas.draw.rounded_rectangle(box, radius=4, fill=(243, 244, 246))
+                if (x, y) == state.food:
+                    canvas.draw.ellipse(
+                        (box[0] + 6, box[1] + 6, box[2] - 6, box[3] - 6),
+                        fill=(244, 63, 94),
+                    )
+    return canvas.png()
+
+
 class Snake(Game[SnakeState, Turn]):
     """The classic: eat, grow, and do not bite yourself."""
 
@@ -337,6 +374,20 @@ class Snake(Game[SnakeState, Turn]):
             f"{food}\n"
             "Board (H head, o body, * food, . empty):\n"
             f"{render_grid(state)}"
+        )
+
+    @override
+    def snapshot(self, state: SnakeState, player: int) -> bytes:
+        """The board as a picture, as it looks in the playground."""
+        return draw_board(state)
+
+    @override
+    def brief(self, state: SnakeState, player: int) -> str:
+        """The score and heading; the picture shows the board."""
+        return (
+            f"Score: {state.score}. The snake is {len(state.body)} cells long and "
+            f"heading {state.heading}. The picture shows the board: the snake is "
+            "green with a darker head, and the food is the red dot."
         )
 
     @override

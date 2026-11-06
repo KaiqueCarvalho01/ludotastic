@@ -21,11 +21,12 @@ __all__ = [
     "SeatInfo",
     "Timing",
     "TurnContext",
+    "View",
     "registry",
 ]
 
 from .ai import AIPlayer
-from .game import ActionMode, Game, GameInfo, Outcome, Timing
+from .game import ActionMode, Game, GameInfo, Outcome, Timing, View
 from .match import Match, MatchStatus, MoveRecord, SeatInfo
 from .players import Decision, HumanPlayer, Player, PlayerKind, RandomBot, TurnContext
 from .registry import ENTRY_POINT_GROUP, GameRegistry, registry

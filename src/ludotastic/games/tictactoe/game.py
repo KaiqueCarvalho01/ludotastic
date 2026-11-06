@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Literal, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ludotastic.engine.drawing import Canvas
 from ludotastic.engine.game import ActionMode, BotFactory, Game, GameInfo, Outcome
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
 
@@ -100,6 +101,38 @@ def render_board(board: Board) -> str:
     return "\n---+---+---\n".join(rows)
 
 
+PICTURE = 420
+"""Side of the board picture, in pixels."""
+
+
+def draw_board(board: Board) -> bytes:
+    """Draw the board as a PNG, the way it looks in the playground.
+
+    Examples:
+        >>> draw_board((None,) * 9)[1:4]
+        b'PNG'
+    """
+    canvas = Canvas(PICTURE, PICTURE)
+    cell = PICTURE / 3
+    for i in (1, 2):
+        canvas.draw.line(
+            [(i * cell, 10), (i * cell, PICTURE - 10)], fill="black", width=6
+        )
+        canvas.draw.line(
+            [(10, i * cell), (PICTURE - 10, i * cell)], fill="black", width=6
+        )
+    for index, mark in enumerate(board):
+        x, y = (index % 3 + 0.5) * cell, (index // 3 + 0.5) * cell
+        if mark is None:
+            canvas.text((x, y), str(index), size=36, fill=(170, 170, 170))
+        else:
+            canvas.text((x, y), mark, size=110, fill=MARK_COLORS[mark])
+    return canvas.png()
+
+
+MARK_COLORS = {"X": (37, 99, 235), "O": (225, 29, 72)}
+
+
 class TicTacToe(Game[TicTacToeState, Place]):
     """The classic: three in a row wins."""
 
@@ -184,6 +217,20 @@ class TicTacToe(Game[TicTacToeState, Place]):
             "Board (numbers are empty cells):\n"
             f"{render_board(state.board)}\n"
             f"Empty cells: {empty or 'none'}."
+        )
+
+    @override
+    def snapshot(self, state: TicTacToeState, player: int) -> bytes:
+        """The board as a picture: X in blue, O in red, empty cells numbered."""
+        return draw_board(state.board)
+
+    @override
+    def brief(self, state: TicTacToeState, player: int) -> str:
+        """Who is who, and whose turn it is; the picture shows the board."""
+        mark, other = MARKS[player], MARKS[1 - player]
+        return (
+            f"You are {mark}; your opponent is {other}. It is {state.next_mark}'s "
+            "turn. The picture shows the board; empty cells show their number."
         )
 
     @override

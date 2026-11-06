@@ -22,6 +22,7 @@ __all__ = [
     "GameInfo",
     "Outcome",
     "Timing",
+    "View",
 ]
 
 
@@ -58,6 +59,23 @@ class ActionMode(StrEnum):
 
     TOOLS = "tools"
     """Inspect the game through tools, then submit the game's action model."""
+
+
+class View(StrEnum):
+    """What an AI player is shown of the game."""
+
+    TEXT = "text"
+    """The game described in text, by [`observe`][ludotastic.Game.observe]."""
+
+    IMAGE = "image"
+    """A picture of the game, from [`snapshot`][ludotastic.Game.snapshot].
+
+    Only the turn's essentials go along in text: whose turn it is, and the
+    options to pick from.
+    """
+
+    BOTH = "both"
+    """The text description and the picture together."""
 
 
 class GameInfo(BaseModel):
@@ -290,6 +308,29 @@ class Game[S: BaseModel, A: BaseModel](ABC):
         actions.
         """
         return ()
+
+    def snapshot(self, state: S, player: int) -> bytes | None:  # noqa: ARG002
+        """A PNG picture of `state` as `player` sees it, for AI players.
+
+        `None` means the game cannot draw itself, so only the
+        [text view][ludotastic.View.TEXT] is available. Pictures must be
+        280 to 1568 pixels a side, the range image-reading models accept.
+        """
+        return None
+
+    @property
+    def can_draw(self) -> bool:
+        """Whether the game draws pictures, for the image view."""
+        return type(self).snapshot is not Game.snapshot
+
+    def brief(self, state: S, player: int) -> str:
+        """The text that goes along with a picture of `state`.
+
+        Defaults to naming the seat. Override it to add what the picture
+        does not show well, such as the score.
+        """
+        del state
+        return f"You are {self.player_label(player)}. The picture shows the game."
 
     def renderer(self) -> Renderer | None:
         """The NiceGUI renderer for this game, if it has one.

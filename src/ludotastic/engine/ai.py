@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 from pydantic import BaseModel
 from pydantic_ai import (
     Agent,
+    BinaryContent,
     Choice,
     Choices,
     ModelRetry,
@@ -16,10 +17,11 @@ from pydantic_ai import (
     UsageLimits,
 )
 from pydantic_ai.capabilities import ModelFallback
-from pydantic_ai.models import Model, infer_model
+from pydantic_ai.models import Model
 from pydantic_ai.models.decision import DecisionModel
 
-from ludotastic.engine.game import ActionMode
+from ludotastic.engine.game import ActionMode, View
+from ludotastic.engine.models import resolve_model
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
 from ludotastic.engine.usage import Usage
 
@@ -56,6 +58,7 @@ class AIPlayer(Player):
         instructions: str | None = None,
         include_rules: bool = True,
         fallback_model: Model | str | None = None,
+        view: View = View.TEXT,
         retries: int = 2,
         request_limit: int = 10,
         model_settings: ModelSettings | None = None,
@@ -70,6 +73,8 @@ class AIPlayer(Player):
             include_rules: Whether to send the game's rules with every request.
             fallback_model: A model that takes over requests the main model
                 cannot handle, such as a language model behind a decision model.
+            view: Whether the model is shown the game as text, as a picture,
+                or both.
             retries: How often an invalid or illegal action is sent back.
             request_limit: The most model requests a single turn may take.
             model_settings: Settings such as temperature, passed to every run.
@@ -78,7 +83,7 @@ class AIPlayer(Player):
             ValueError: If a decision model, which can only pick among options,
                 is asked to act in another mode without a fallback model.
         """
-        self.model = model if isinstance(model, Model) else infer_model(model)
+        self.model = model if isinstance(model, Model) else resolve_model(model)
         picks_only = isinstance(self.model, DecisionModel)
         if (
             picks_only
@@ -96,7 +101,19 @@ class AIPlayer(Player):
         self.mode = mode
         self.instructions = instructions
         self.include_rules = include_rules
-        self.fallback_model = fallback_model
+        self.fallback_model = (
+            resolve_model(fallback_model)
+            if isinstance(fallback_model, str)
+            else fallback_model
+        )
+        if view is not View.TEXT and not self.model.profile.get(
+            "supports_image_input", False
+        ):
+            msg = (
+                f"{self.model.model_name} cannot take images, so it needs the text view"
+            )
+            raise ValueError(msg)
+        self.view = view
         self.retries = retries
         self.request_limit = request_limit
         self.model_settings = model_settings
@@ -104,9 +121,10 @@ class AIPlayer(Player):
     @property
     @override
     def label(self) -> str:
-        """Group statistics by model and mode, not by display name."""
+        """Group statistics by model, mode and view, not by display name."""
         mode = "" if self.mode is None else f"/{self.mode}"
-        return f"ai:{self.model_id}{mode}"
+        view = "" if self.view is View.TEXT else f"+{self.view}"
+        return f"ai:{self.model_id}{mode}{view}"
 
     def _instructions(self, ctx: TurnContext) -> str:
         game = ctx.game
@@ -156,14 +174,14 @@ class AIPlayer(Player):
             )
         if mode is ActionMode.CHOICE:
             agent = self._choice_agent(ctx)
-            prompt = ctx.observation
+            prompt = self._prompt(ctx)
         else:
             agent = self._action_agent(ctx, with_tools=mode is ActionMode.TOOLS)
             prompt = (
                 f"It is your turn ({ctx.game.player_label(ctx.player)}). "
                 "Look at the game with the tools, then submit your action."
                 if mode is ActionMode.TOOLS
-                else ctx.observation
+                else self._prompt(ctx)
             )
         result = await agent.run(
             prompt,
@@ -181,6 +199,8 @@ class AIPlayer(Player):
             "mode": str(mode),
             "model": result.response.model_name,
         }
+        if self.view is not View.TEXT:
+            details["view"] = str(self.view)
         if (provider_details := result.response.provider_details) is not None:
             for key in ("confidence", "probabilities", "route"):
                 if key in provider_details:
@@ -188,6 +208,19 @@ class AIPlayer(Player):
         return Decision(
             action=cast("BaseModel", result.output), details=details, usage=usage
         )
+
+    def _prompt(self, ctx: TurnContext) -> str | list[str | BinaryContent]:
+        """The game as this player is shown it: text, a picture, or both."""
+        if self.view is View.TEXT:
+            return ctx.observation
+        picture = ctx.game.snapshot(ctx.state, ctx.player)
+        if picture is None:
+            msg = f"{ctx.game.info.name} cannot draw itself for the image view"
+            raise ValueError(msg)
+        image = BinaryContent(picture, media_type="image/png")
+        if self.view is View.IMAGE:
+            return [ctx.game.brief(ctx.state, ctx.player), image]
+        return [ctx.observation, image]
 
     def _choice_agent(self, ctx: TurnContext) -> Agent[_Turn, Any]:
         game = ctx.game

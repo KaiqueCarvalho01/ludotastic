@@ -7,7 +7,7 @@ import typer
 from dotenv import load_dotenv
 from pydantic_ai import prices
 
-from ludotastic.engine.game import ActionMode
+from ludotastic.engine.game import ActionMode, View
 from ludotastic.engine.registry import registry
 from ludotastic.engine.usage import Usage, format_cost, format_tokens
 from ludotastic.service import AISpec, BotSpec, MatchService, bot_names
@@ -56,11 +56,22 @@ def list_games() -> None:
 
 
 def _spec(text: str) -> BotSpec | AISpec:
-    """Parse `bot:NAME`, or a model name with an optional `@mode` suffix."""
+    """Parse `bot:NAME`, or a model name with optional `@mode` and `+view`.
+
+    Examples:
+        >>> spec = _spec("typesafe:jev-latest@choice+image")
+        >>> spec.model, str(spec.mode), str(spec.view)
+        ('typesafe:jev-latest', 'choice', 'image')
+    """
     if text.startswith("bot:"):
         return BotSpec(bot=text.removeprefix("bot:"))
-    model, _, mode = text.partition("@")
-    return AISpec(model=model, mode=ActionMode(mode) if mode else None)
+    rest, _, view = text.partition("+")
+    model, _, mode = rest.partition("@")
+    return AISpec(
+        model=model,
+        mode=ActionMode(mode) if mode else None,
+        view=View(view) if view else View.TEXT,
+    )
 
 
 @app.command()
@@ -72,7 +83,7 @@ def play(
             help=(
                 "One per seat: `bot:NAME` for a bot, or a model name such as "
                 "`typesafe:jev-latest`, optionally with `@choice`, `@structured` "
-                "or `@tools`."
+                "or `@tools`, and `+image` or `+both` to show it pictures."
             )
         ),
     ],
