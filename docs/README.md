@@ -7,7 +7,7 @@
   | | ![Badges][label-badges] |
   |:-|:-|
   | ![Build][label-build] | [![Nox][badge-actions]][actions] [![semantic-release][badge-semantic-release]][semantic-release] [![PyPI][badge-pypi]][pypi] [![Read the Docs][badge-docs]][docs] |
-  | ![Tests][label-tests] | [![coverage][badge-coverage]][coverage] [![pre-commit][badge-pre-commit]][pre-commit] [![asv][badge-asv]][asv] |
+  | ![Tests][label-tests] | [![coverage][badge-coverage]][coverage] [![pre-commit][badge-pre-commit]][pre-commit] |
   | ![Standards][label-standards] | [![SemVer 2.0.0][badge-semver]][semver] [![Conventional Commits][badge-conventional-commits]][conventional-commits] |
   | ![Code][label-code] | [![uv][badge-uv]][uv] [![Ruff][badge-ruff]][ruff] [![Nox][badge-nox]][nox] [![ty][badge-ty]][ty] |
   | ![Repo][label-repo] | [![GitHub issues][badge-issues]][issues] [![GitHub stars][badge-stars]][stars] [![GitHub license][badge-license]][license] [![All Contributors][badge-all-contributors]][contributors] [![Contributor Covenant][badge-code-of-conduct]][code-of-conduct] |
@@ -40,8 +40,6 @@
 [coverage]: https://codecov.io/gh/MicaelJarniac/ludotastic
 [badge-pre-commit]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=flat-square&logo=pre-commit&logoColor=white
 [pre-commit]: https://github.com/pre-commit/pre-commit
-[badge-asv]: https://img.shields.io/badge/benchmarked%20by-asv-blue?style=flat-square
-[asv]: https://github.com/airspeed-velocity/asv
 
 <!-- Standards -->
 [badge-semver]: https://img.shields.io/badge/SemVer-2.0.0-blue?style=flat-square&logo=semver
@@ -108,11 +106,59 @@ poetry add git+git://github.com/MicaelJarniac/ludotastic
 ```
 
 ## Usage
-For more examples, see the [full documentation][docs].
+Ludotastic is a playground for pitting people, scripted bots and AI models
+against each other in games. Any model [Pydantic AI][pydantic-ai] supports can
+play, including decision models such as TypeSafe's
+[Jev][jev] (`typesafe:jev-latest`).
 
-```python
-from ludotastic import ludotastic
+Set the API keys for the models you want to use, such as `TYPESAFE_API_KEY` or
+`OPENAI_API_KEY`, then start the playground:
+
+```bash
+ludotastic serve
 ```
+
+Open <http://127.0.0.1:8080> to set up and watch matches, browse past matches
+and compare results. The REST API lives under `/api`, documented at `/docs`.
+
+Matches can also run headless, which is handy for comparing models:
+
+```bash
+ludotastic games
+ludotastic play tictactoe typesafe:jev-latest bot:minimax --rounds 10
+ludotastic play tictactoe openai:gpt-6.1-sol@structured anthropic:claude-opus-5-5@tools
+```
+
+Each player is `bot:NAME`, or a model name with an optional action mode:
+
+- `@choice`: pick one of the legal moves, each described in words. The model can
+  never make an illegal move, and this mode suits decision models best.
+- `@structured`: fill in the game's move model. Illegal moves go back to the
+  model for another try.
+- `@tools`: look at the game through tools, then submit a move.
+
+Settings come from `LUDOTASTIC_*` environment variables or a `.env` file; see
+[`Settings`][ludotastic.Settings].
+
+### Writing a game
+A game is a [`Game`][ludotastic.Game] subclass whose states and moves are
+Pydantic models. Ludotastic finds games through the `ludotastic.games` entry
+point group, so a game can ship in its own package:
+
+```toml
+[project.entry-points."ludotastic.games"]
+connect-four = "ludotastic_connect_four:ConnectFour"
+```
+
+The bundled games, such as [Tic-Tac-Toe][tictactoe], are registered the same way
+and make good templates. A game can also provide its own scripted bots, extra AI
+tools and a NiceGUI renderer; games without one get a generic text view. Games
+are turn-based (`Timing.STEP`) or real-time (`Timing.TICK`), where a player that
+is too slow on a tick loses its turn.
+
+[pydantic-ai]: https://ai.pydantic.dev
+[jev]: https://pydantic.dev/docs/ai/models/typesafe/
+[tictactoe]: https://github.com/MicaelJarniac/ludotastic/tree/main/src/ludotastic/games/tictactoe
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

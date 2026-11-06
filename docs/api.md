@@ -2,6 +2,18 @@
 
 This page provides detailed API documentation for Ludotastic.
 
-## Main Module
+## Engine
 
 ::: ludotastic
+
+## Service
+
+::: ludotastic.service
+
+## Storage
+
+::: ludotastic.storage
+
+## Tic-Tac-Toe
+
+::: ludotastic.games.tictactoe

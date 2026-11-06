@@ -9,7 +9,7 @@ license = {text = "MIT"}
 readme = "docs/README.md"
 classifiers = [
   # Get more from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-  "Development Status :: 1 - Planning",
+  "Development Status :: 2 - Pre-Alpha",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Typing :: Typed",
@@ -23,8 +23,24 @@ classifiers = [
 
 requires-python = ">=3.14"  # py_ver
 dependencies = [
+    "fastapi>=0.162.0",
     "loguru>=0.7.3",
+    "nicegui>=4.0.0",
+    "platformdirs>=4.3",
+    "pydantic-ai-slim[anthropic,google,openai,typesafe]>=2.66.0",
+    "pydantic-settings>=2.16.2",
+    "python-dotenv>=1.0",
+    "sqlmodel>=0.0.48",
+    "typer>=0.27.3",
 ]
+
+[project.scripts]
+ludotastic = "ludotastic.cli:main"
+
+# Games are plugins: any installed package can add one to this group.
+# The bundled games register here exactly like third-party ones.
+[project.entry-points."ludotastic.games"]
+tictactoe = "ludotastic.games.tictactoe:TicTacToe"
 
 [build-system]
 requires = ["hatchling"]
@@ -44,12 +60,8 @@ tests = [
     "hypothesis>=6.125.3",
     "inline-snapshot>=0.20.2",
     "pytest>=8.3.4",
-    "pytest-benchmark>=5.1.0",
+    "pytest-asyncio>=1.4.1",
     "pytest-cov>=6.0.0",
-]
-benchmarking = [
-    "asv>=0.6.4",
-    "virtualenv>=20.29.1",
 ]
 docs = [
     "mkdocs>=1.5.3",
@@ -80,7 +92,6 @@ automation = [
 ]
 dev = [
     {include-group = "tests"},
-    {include-group = "benchmarking"},
     {include-group = "docs"},
     {include-group = "typing"},
     {include-group = "linting"},
@@ -105,13 +116,25 @@ ignore = [
   "ISC001",
   # Per-file copyright headers: the top-level LICENSE covers the project.
   "CPY001",
+  # Games need seeded, reproducible randomness, not cryptographic randomness.
+  "S311",
+  # Pydantic, FastAPI, Typer, NiceGUI and pytest read annotations at runtime, so
+  # imports used only in annotations still have to be importable.
+  "TC001",
+  "TC002",
+  "TC003",
 ]
 unfixable = ["ERA001"]
 
 [tool.ruff.lint.per-file-ignores]
 # S101: asserts are the point. PLR2004: magic numbers are fixture data.
 # S106/S107: "tokens" here are literal test fixtures, not credentials.
-"tests/*" = ["S101", "PLR2004", "S106", "S107"]
+"tests/*" = [
+  "S101", "PLR2004", "S106", "S107", "D101", "D102", "D103", "ARG001", "ARG005",
+  "E501", "ASYNC110",
+]
+# Typer reads options from the signature.
+"src/ludotastic/cli.py" = ["FBT002", "PLR0913", "PLR0917"]
 
 [tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["id", "type"]
@@ -123,7 +146,7 @@ convention = "google"
 docstring-code-format = true
 
 [tool.ty.src]
-include = ["src", "docs", "tests", "benchmarks", "noxfile.py"]
+include = ["src", "docs", "tests", "noxfile.py"]
 
 [tool.ty.rules]
 # Fail on every diagnostic, not just the ones ty reports as errors by default.
@@ -186,6 +209,9 @@ show_missing = true
 # Docstring examples are part of the docs; keep them running.
 addopts = "--doctest-modules"
 testpaths = ["tests", "src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
 filterwarnings = [
   # Unclosed resources (files, sockets, database connections) left to the
   # garbage collector surface as a ResourceWarning at finalization. Both lines
@@ -203,7 +229,5 @@ format-command = "ruff format --stdin-filename {filename}"
 skip = [
   "src",
   "tests",
-  "benchmarks",
-  ".asv",
   "uv.lock",
 ]

@@ -33,8 +33,6 @@
     - [pytest][pytest] <sup>[config][pyproject_toml]</sup>
       - Plugins
         - [pytest-cov][pytest-cov]
-        - [pytest-benchmark][pytest-benchmark]
-    - [airspeed velocity (`asv`)][asv]
     - [Coverage.py][coveragepy] <sup>[config][pyproject_toml]</sup>
   - Documenting
     - [MkDocs][mkdocs] <sup>[config][docs_mkdocs_yml]</sup>
@@ -91,8 +89,6 @@
 [ty]: https://github.com/astral-sh/ty
 [pytest]: https://github.com/pytest-dev/pytest
 [pytest-cov]: https://github.com/pytest-dev/pytest-cov
-[pytest-benchmark]: https://github.com/ionelmc/pytest-benchmark
-[asv]: https://github.com/airspeed-velocity/asv
 [coveragepy]: https://github.com/nedbat/coveragepy
 [nox]: https://github.com/wntrblm/nox
 [cruft]: https://github.com/cruft/cruft/
