@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.2.1 (2026-11-06)
+
+### Bug Fixes
+
+- Trigger a release to publish to PyPI
+  ([`b6fbf66`](https://github.com/MicaelJarniac/ludotastic/commit/b6fbf662baf5918ef7d5431079c9df7e60272497))
+
+
 ## v0.2.0 (2026-11-06)
 
 ### Bug Fixes
