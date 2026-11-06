@@ -1,6 +1,6 @@
 [project]
 name = "ludotastic"
-version = "0.1.1"
+version = "0.1.2"
 description = "Where humans and AI come to play."
 authors = [
   {name = "Micael Jarniac", email = "micael@jarniac.dev"},
