@@ -103,6 +103,15 @@ async def test_provider_details_are_reported() -> None:
     assert "other" not in decision.details
 
 
+async def test_forced_move_skips_the_model() -> None:
+    def never(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        raise AssertionError  # pragma: no cover
+
+    decision = await AIPlayer(FunctionModel(never)).act(ctx("XOXXOOOX."))
+    assert decision.action == Place(cell=8)
+    assert decision.details == {"mode": "choice", "forced": True}
+
+
 def test_unknown_model() -> None:
     with pytest.raises(Exception, match="Unknown model"):
         AIPlayer("nope:nothing")

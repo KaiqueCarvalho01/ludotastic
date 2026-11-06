@@ -125,8 +125,17 @@ class AIPlayer(Player):
 
     @override
     async def act(self, ctx: TurnContext) -> Decision:
-        """Ask the model for an action."""
+        """Ask the model for an action.
+
+        A forced move, with only one legal action, is played without asking: there
+        is nothing to decide, and decision models refuse a pick-one with a single
+        option.
+        """
         mode = self.mode or ctx.game.info.action_modes[0]
+        if len(ctx.legal_actions) == 1:
+            return Decision(
+                action=ctx.legal_actions[0], details={"mode": str(mode), "forced": True}
+            )
         if mode is ActionMode.CHOICE:
             agent = self._choice_agent(ctx)
             prompt = ctx.observation
