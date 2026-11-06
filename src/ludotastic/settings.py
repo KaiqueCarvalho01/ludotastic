@@ -7,6 +7,8 @@ from platformdirs import user_data_path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from ludotastic.types import NonNegativeFloat, PortNumber, PositiveFloat, PositiveInt
+
 __all__ = ["Settings", "get_settings"]
 
 
@@ -27,7 +29,7 @@ class Settings(BaseSettings):
 
     host: str = "127.0.0.1"
     """Address the server listens on."""
-    port: int = Field(default=8080, ge=1, le=65535)
+    port: PortNumber = 8080
     """Port the server listens on."""
     title: str = "Ludotastic"
     """Title shown in the browser."""
@@ -52,11 +54,11 @@ class Settings(BaseSettings):
         ]
     )
     """Models offered in the UI; any Pydantic AI model name also works."""
-    ai_delay: float = Field(default=0.5, ge=0)
+    ai_delay: NonNegativeFloat = 0.5
     """Seconds to pause between turns when no human is playing."""
-    turn_timeout: float | None = Field(default=None, gt=0)
+    turn_timeout: PositiveFloat | None = None
     """Seconds a player may think in step-based games before forfeiting."""
-    max_turns: int | None = Field(default=1000, gt=0)
+    max_turns: PositiveInt | None = 1000
     """Turns after which a match is called a draw."""
     update_prices: bool = True
     """Download the latest model prices when the server starts, then hourly.

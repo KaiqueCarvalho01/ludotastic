@@ -5,9 +5,11 @@ import random
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, Self, cast
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, cast
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
+
+from ludotastic.types import PositiveFloat, PositiveInt
 
 if TYPE_CHECKING:
     from pydantic_ai import Tool
@@ -83,19 +85,19 @@ class GameInfo(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]*$")
+    id: Annotated[str, StringConstraints(pattern=r"^[a-z0-9][a-z0-9_-]*$")]
     """Unique, URL-safe identifier."""
     name: str
     """Human-readable name."""
     description: str
     """One-line description."""
-    min_players: int = Field(default=1, ge=1)
+    min_players: PositiveInt = 1
     """Fewest players the game supports."""
-    max_players: int = Field(default=1, ge=1)
+    max_players: PositiveInt = 1
     """Most players the game supports."""
     timing: Timing = Timing.STEP
     """Whether the game waits for players or runs on a clock."""
-    tick_seconds: float = Field(default=1.0, gt=0)
+    tick_seconds: PositiveFloat = 1.0
     """Length of a tick, for games with [`Timing.TICK`][ludotastic.Timing.TICK]."""
     action_modes: tuple[ActionMode, ...] = tuple(ActionMode)
     """The ways an AI can be asked to act, the first being the default."""

@@ -3,9 +3,10 @@
 import random
 from collections.abc import Mapping, Sequence
 from functools import cache
-from typing import TYPE_CHECKING, Literal, override
+from typing import TYPE_CHECKING, Annotated, Literal, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from annotated_types import Interval
+from pydantic import BaseModel, ConfigDict
 
 from ludotastic.engine.drawing import Canvas
 from ludotastic.engine.game import ActionMode, BotFactory, Game, GameInfo, Outcome
@@ -54,7 +55,7 @@ class Place(BaseModel):
 
     model_config = ConfigDict(frozen=True, use_attribute_docstrings=True)
 
-    cell: int = Field(ge=0, le=8)
+    cell: Annotated[int, Interval(ge=0, le=8)]
     """The cell to mark: 0 is top left, 1 top center, 2 top right, 3 middle left,
     4 center, 5 middle right, 6 bottom left, 7 bottom center, 8 bottom right."""
 

@@ -2,8 +2,9 @@
 
 from typing import Annotated, Any, cast
 
+from annotated_types import MinLen
 from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, Request, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ludotastic.engine.game import Game, GameInfo
 from ludotastic.engine.match import Match, MatchStatus, MoveRecord, SeatInfo
@@ -27,7 +28,7 @@ class NewMatch(BaseModel):
     """What it takes to start a match."""
 
     game_id: str
-    players: list[PlayerSpec] = Field(min_length=1)
+    players: Annotated[list[PlayerSpec], MinLen(1)]
     seed: int | None = None
 
 
