@@ -2,6 +2,28 @@
 
 <!-- version list -->
 
+## v0.2.0 (2026-11-06)
+
+### Bug Fixes
+
+- **web**: Load the moves list only when it is opened
+  ([`847684d`](https://github.com/MicaelJarniac/ludotastic/commit/847684d5860e344006278d4007fa0107d83212df))
+
+### Features
+
+- Add a live AI cost and token meter
+  ([`343596e`](https://github.com/MicaelJarniac/ludotastic/commit/343596ecaf71a00d779f4ddafffc0668573f06d7))
+
+- Let AI players see the game as a picture
+  ([`a6ac756`](https://github.com/MicaelJarniac/ludotastic/commit/a6ac75602452781f5da493695865cde35bef398e))
+
+- **2048**: Add 2048, a solo sliding-tile puzzle
+  ([`0612134`](https://github.com/MicaelJarniac/ludotastic/commit/0612134d8be7437fa9b8bd25ad13e989220c8f29))
+
+- **snake**: Add Snake, a solo real-time game
+  ([`2e80c8e`](https://github.com/MicaelJarniac/ludotastic/commit/2e80c8ef9f6e87c698b0a90683175f13164ff61d))
+
+
 ## v0.1.2 (2026-11-06)
 
 ### Bug Fixes
