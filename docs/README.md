@@ -156,6 +156,10 @@ tools and a NiceGUI renderer; games without one get a generic text view. Games
 are turn-based (`Timing.STEP`) or real-time (`Timing.TICK`), where a player that
 is too slow on a tick loses its turn.
 
+How a game describes its state in [`observe`][ludotastic.Game.observe] affects
+how well models play it, sometimes a lot: see the
+[Tic-Tac-Toe notes](notes/tictactoe-observation.md) for a measured example.
+
 [pydantic-ai]: https://ai.pydantic.dev
 [jev]: https://pydantic.dev/docs/ai/models/typesafe/
 [tictactoe]: https://github.com/MicaelJarniac/ludotastic/tree/main/src/ludotastic/games/tictactoe

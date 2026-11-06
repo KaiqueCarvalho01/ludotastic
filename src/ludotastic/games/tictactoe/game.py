@@ -164,7 +164,13 @@ class TicTacToe(Game[TicTacToeState, Place]):
 
     @override
     def observe(self, state: TicTacToeState, player: int) -> str:
-        """The board, with empty cells numbered."""
+        """The board, with empty cells numbered.
+
+        This ASCII layout is deliberately kept as is, so results stay comparable.
+        Listing the eight lines in words instead measured noticeably better for
+        TypeSafe's Jev at spotting threats (97% against 87% on forced moves);
+        see `docs/notes/tictactoe-observation.md` before changing it.
+        """
         mark = MARKS[player]
         other = MARKS[1 - player]
         empty = ", ".join(

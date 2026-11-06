@@ -123,6 +123,8 @@ nav:
   - Reference:
     - Tools & Standards: reference.md
     - API Reference: api.md
+  - Notes:
+    - "Tic-Tac-Toe: board format for AI": notes/tictactoe-observation.md
 
 extra:
   social:
