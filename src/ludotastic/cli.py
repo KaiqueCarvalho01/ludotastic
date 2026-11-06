@@ -5,9 +5,11 @@ from typing import Annotated, Any
 
 import typer
 from dotenv import load_dotenv
+from pydantic_ai import prices
 
 from ludotastic.engine.game import ActionMode
 from ludotastic.engine.registry import registry
+from ludotastic.engine.usage import Usage, format_cost, format_tokens
 from ludotastic.service import AISpec, BotSpec, MatchService, bot_names
 from ludotastic.settings import get_settings
 
@@ -86,6 +88,7 @@ def play(
     service = MatchService(settings=settings)
     specs = [_spec(p) for p in players]
     totals: dict[str, float] = {}
+    spent: dict[str, Usage] = {}
 
     async def run_all() -> None:
         for round_ in range(rounds):
@@ -101,6 +104,8 @@ def play(
                 match.subscribe(_printer())
             await match.run()
             names = [p.label for p in match.players]
+            for seat, name in enumerate(names):
+                spent[name] = spent.get(name, Usage()) + match.usage(seat)
             if match.outcome is None:
                 typer.secho(f"Round {round_ + 1}: aborted: {match.error}", fg="red")
                 continue
@@ -111,6 +116,7 @@ def play(
             )
             typer.echo(f"Round {round_ + 1}: {match.outcome.reason} ({result})")
 
+    updater = prices.update_in_background() if settings.update_prices else None
     try:
         asyncio.run(run_all())
     except KeyError:
@@ -120,10 +126,23 @@ def play(
         typer.secho(str(e), fg="red", err=True)
         raise typer.Exit(1) from None
     finally:
+        if updater is not None:
+            updater.stop()
         service.store.close()
+    _summary(totals, spent)
+
+
+def _summary(totals: dict[str, float], spent: dict[str, Usage]) -> None:
     typer.echo("Total score:")
     for name, score in sorted(totals.items(), key=lambda kv: -kv[1]):
-        typer.echo(f"  {name}: {score:g}")
+        usage = spent.get(name, Usage())
+        cost = (
+            f" ({format_cost(usage.cost, priced=usage.priced)}, "
+            f"{format_tokens(usage.tokens)} tokens, {usage.requests} requests)"
+            if usage.requests
+            else ""
+        )
+        typer.echo(f"  {name}: {score:g}{cost}")
 
 
 def _printer() -> Any:  # noqa: ANN401

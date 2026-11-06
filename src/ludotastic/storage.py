@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import Field, Session, SQLModel, col, create_engine, select
 
 from ludotastic.engine.match import Match
+from ludotastic.engine.usage import Usage
 
 __all__ = ["MatchRecord", "PlayerStats", "Store"]
 
@@ -49,6 +50,14 @@ class MatchRecord(SQLModel, table=True):
             history=[move.model_dump(mode="json") for move in match.history],
         )
 
+    def usage(self, seat: int | None = None) -> Usage:
+        """Model usage, for one seat or the whole match."""
+        return Usage.total(
+            Usage.model_validate(move["usage"])
+            for move in self.history
+            if move.get("usage") is not None and (seat is None or move["seat"] == seat)
+        )
+
 
 class PlayerStats(BaseModel):
     """How one kind of player has done at one game."""
@@ -62,6 +71,8 @@ class PlayerStats(BaseModel):
     losses: int = 0
     score: float = 0.0
     """Total score, so a win is 1 and a two-player draw is 0.5."""
+    usage: Usage = Usage()
+    """Model usage across every match counted."""
 
     @property
     def win_rate(self) -> float:
@@ -137,7 +148,8 @@ class Store:
             if record.scores is None:
                 continue
             top = max(record.scores)
-            tied = all(s == top for s in record.scores)
+            solo = len(record.scores) == 1
+            tied = not solo and all(s == top for s in record.scores)
             for seat, score in zip(record.seats, record.scores, strict=True):
                 key = (record.game_id, seat["group"])
                 entry = table.setdefault(
@@ -145,6 +157,9 @@ class Store:
                 )
                 entry.played += 1
                 entry.score += score
+                entry.usage += record.usage(seat["seat"])
+                if solo:
+                    continue  # A solo score is a score, not a win or a loss.
                 if tied:
                     entry.draws += 1
                 elif score == top:

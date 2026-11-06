@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     """Seconds a player may think in step-based games before forfeiting."""
     max_turns: int | None = Field(default=1000, gt=0)
     """Turns after which a match is called a draw."""
+    update_prices: bool = True
+    """Download the latest model prices when the server starts, then hourly.
+
+    Prices bundled with Pydantic AI are used otherwise, or if a download fails.
+    """
 
     @property
     def resolved_database_url(self) -> str:

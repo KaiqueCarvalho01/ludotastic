@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from ludotastic.engine.game import Game, Outcome, Timing
 from ludotastic.engine.players import Decision, HumanPlayer, Player, TurnContext
+from ludotastic.engine.usage import Usage
 
 __all__ = [
     "Match",
@@ -59,6 +60,8 @@ class MoveRecord(BaseModel):
     """Whatever the player reported, such as model usage."""
     forced: bool = False
     """Whether the engine chose this action, because the player was too slow."""
+    usage: Usage | None = None
+    """What the move cost, for players that use a model."""
 
 
 type Listener = Callable[[Match], Awaitable[None] | None]
@@ -135,6 +138,14 @@ class Match:
             )
             for i, p in enumerate(self.players)
         ]
+
+    def usage(self, seat: int | None = None) -> Usage:
+        """Model usage so far, for one seat or the whole match."""
+        return Usage.total(
+            move.usage
+            for move in self.history
+            if move.usage is not None and (seat is None or move.seat == seat)
+        )
 
     @property
     def done(self) -> bool:
@@ -263,7 +274,9 @@ class Match:
                     reason = f"{label} made an illegal move"
                     return Outcome.forfeit(game.num_players, seat, reason)
                 actions[seat] = decision.action
-                self._record(seat, decision.action, seconds, decision.details)
+                self._record(
+                    seat, decision.action, seconds, decision.details, decision.usage
+                )
             elif not ticking:
                 return Outcome.forfeit(
                     game.num_players, seat, f"{label} ran out of time"
@@ -341,12 +354,13 @@ class Match:
             if task not in pending
         }
 
-    def _record(
+    def _record(  # noqa: PLR0913
         self,
         seat: int,
         action: BaseModel,
         seconds: float,
         details: dict[str, Any],
+        usage: Usage | None = None,
         *,
         forced: bool = False,
     ) -> None:
@@ -359,5 +373,6 @@ class Match:
                 seconds=round(seconds, 3),
                 details=details,
                 forced=forced,
+                usage=usage,
             )
         )

@@ -54,7 +54,9 @@ async def test_choice_mode_picks_a_described_move() -> None:
     decision = await player.act(ctx())
     assert decision.action == Place(cell=4)
     assert decision.details["mode"] == "choice"
-    assert decision.details["requests"] == 1
+    assert decision.usage is not None
+    assert decision.usage.requests == 1
+    assert decision.usage.tokens > 0
     options = seen["schema"]["properties"]["response"]["anyOf"]  # ty: ignore[not-subscriptable]
     assert {
         "const": "4",
@@ -86,7 +88,8 @@ async def test_tools_mode_offers_engine_tools() -> None:
     player = AIPlayer(TestModel(), mode=ActionMode.TOOLS)
     decision = await player.act(ctx())
     assert decision.action == Place(cell=0)
-    assert decision.details["requests"] == 2
+    assert decision.usage is not None
+    assert decision.usage.requests == 2
 
 
 async def test_default_mode_and_label() -> None:

@@ -21,6 +21,7 @@ from pydantic_ai.models.decision import DecisionModel
 
 from ludotastic.engine.game import ActionMode
 from ludotastic.engine.players import Decision, Player, PlayerKind, TurnContext
+from ludotastic.engine.usage import Usage
 
 if TYPE_CHECKING:
     from pydantic_ai.settings import ModelSettings
@@ -169,19 +170,24 @@ class AIPlayer(Player):
             deps=_Turn(ctx=ctx),
             usage_limits=UsageLimits(request_limit=self.request_limit),
         )
-        usage = result.usage
+        run = result.usage
+        usage = Usage(
+            requests=run.requests,
+            input_tokens=run.input_tokens,
+            output_tokens=run.output_tokens,
+            cost=run.cost,
+        )
         details: dict[str, Any] = {
             "mode": str(mode),
             "model": result.response.model_name,
-            "requests": usage.requests,
-            "input_tokens": usage.input_tokens,
-            "output_tokens": usage.output_tokens,
         }
         if (provider_details := result.response.provider_details) is not None:
             for key in ("confidence", "probabilities", "route"):
                 if key in provider_details:
                     details[key] = provider_details[key]
-        return Decision(action=cast("BaseModel", result.output), details=details)
+        return Decision(
+            action=cast("BaseModel", result.output), details=details, usage=usage
+        )
 
     def _choice_agent(self, ctx: TurnContext) -> Agent[_Turn, Any]:
         game = ctx.game

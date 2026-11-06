@@ -10,6 +10,7 @@ from ludotastic.engine.game import Game
 from ludotastic.engine.match import Match, MatchStatus, MoveRecord
 from ludotastic.engine.players import HumanPlayer
 from ludotastic.engine.render import RenderContext
+from ludotastic.engine.usage import Usage, format_cost, format_tokens
 
 __all__ = ["generic_renderer", "match_view"]
 
@@ -55,6 +56,26 @@ def generic_renderer(ctx: RenderContext) -> None:
                 ).props("outline no-caps")
 
 
+def _usage_line(usage: Usage) -> ui.row:
+    """A compact meter: cost, tokens and requests."""
+    cost = format_cost(usage.cost, priced=usage.priced)
+    with ui.row().classes("items-center gap-3 text-xs text-gray-500") as row:
+        with ui.row().classes("items-center gap-1 no-wrap"):
+            ui.icon("payments", size="xs")
+            ui.label(cost).classes("font-mono").mark("cost")
+        with ui.row().classes("items-center gap-1 no-wrap"):
+            ui.icon("token", size="xs")
+            ui.label(format_tokens(usage.tokens)).classes("font-mono").tooltip(
+                f"{usage.input_tokens:,} in, {usage.output_tokens:,} out"
+            )
+        with ui.row().classes("items-center gap-1 no-wrap"):
+            ui.icon("sync_alt", size="xs")
+            ui.label(f"{usage.requests:,}").classes("font-mono").tooltip("Requests")
+    if usage.cost is None and usage.requests:
+        row.tooltip("No price is known for this model.")
+    return row
+
+
 def _details(details: dict[str, Any]) -> str:
     return json.dumps(details, indent=2, default=str)
 
@@ -63,7 +84,7 @@ def _move_row(game: Game[Any, Any], move: MoveRecord) -> None:
     """One line of the move list, expandable when there is more to show."""
     title = f"{move.turn + 1}. {game.player_label(move.seat)}: {move.description}"
     confidence = move.details.get("confidence", {}).get("response")
-    if not move.details and not move.forced:
+    if not move.details and not move.forced and move.usage is None:
         ui.label(title).classes("w-full py-1 px-4 text-sm")
         return
     with ui.expansion().classes("w-full").props("dense") as expansion:
@@ -83,6 +104,8 @@ def _move_row(game: Game[Any, Any], move: MoveRecord) -> None:
             ui.label("Forced: the player was too slow.").classes("text-sm")
         elif move.details.get("forced"):
             ui.label("Forced: the only legal move.").classes("text-sm")
+        if move.usage is not None:
+            _usage_line(move.usage)
         if move.details:
             ui.code(_details(move.details), language="json").classes("w-full text-xs")
 
@@ -153,6 +176,14 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
                                 ui.label(
                                     f"{match.outcome.scores[seat.seat]:g}"
                                 ).classes("text-lg font-bold")
+                        if seat.kind == "ai":
+                            _usage_line(match.usage(seat.seat)).classes("pl-9")
+                    ai_seats = sum(seat.kind == "ai" for seat in match.seats)
+                    if ai_seats > 1:
+                        ui.separator()
+                        with ui.row().classes("w-full items-center gap-2"):
+                            ui.label("Total").classes("text-sm font-medium")
+                            _usage_line(match.usage())
 
                 seats()
 

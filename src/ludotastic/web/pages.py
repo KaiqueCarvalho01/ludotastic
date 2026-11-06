@@ -8,6 +8,7 @@ from nicegui import ui
 
 from ludotastic.engine.game import Game
 from ludotastic.engine.players import PlayerKind
+from ludotastic.engine.usage import Usage, format_cost
 from ludotastic.service import (
     AISpec,
     BotSpec,
@@ -229,6 +230,7 @@ def _history_page(service: MatchService) -> None:
             "scores": ", ".join(f"{x:g}" for x in r.scores or []),
             "reason": r.reason or "",
             "turns": r.turns,
+            "ai cost": _cost(r.usage()),
             "status": r.status,
             "date": r.created_at.strftime("%Y-%m-%d %H:%M"),
         }
@@ -236,7 +238,16 @@ def _history_page(service: MatchService) -> None:
     ]
     columns = [
         {"name": k, "label": k.title(), "field": k, "align": "left", "sortable": True}
-        for k in ("date", "game", "players", "scores", "reason", "turns", "status")
+        for k in (
+            "date",
+            "game",
+            "players",
+            "scores",
+            "reason",
+            "turns",
+            "ai cost",
+            "status",
+        )
     ]
     table = ui.table(columns=columns, rows=rows, row_key="id", pagination=20)
     table.classes("w-full cursor-pointer")
@@ -273,7 +284,17 @@ def _stats_page(service: MatchService) -> None:
     if not stats:
         ui.label("Play some matches first.")
         return
-    keys = ("game", "player", "played", "wins", "draws", "losses", "mean_score")
+    keys = (
+        "game",
+        "player",
+        "played",
+        "wins",
+        "draws",
+        "losses",
+        "mean_score",
+        "cost",
+        "cost_per_match",
+    )
     columns = [
         {
             "name": k,
@@ -294,10 +315,20 @@ def _stats_page(service: MatchService) -> None:
             "draws": s.draws,
             "losses": s.losses,
             "mean_score": round(s.mean_score, 3),
+            "cost": _cost(s.usage),
+            "cost_per_match": _cost(s.usage, per=s.played),
         }
         for s in stats
     ]
     ui.table(columns=columns, rows=rows, row_key="id").classes("w-full")
+
+
+def _cost(usage: Usage, *, per: int = 1) -> str:
+    """A cost for a table: blank when nothing used a model."""
+    if usage.requests == 0:
+        return ""
+    cost = None if usage.cost is None else usage.cost / per
+    return format_cost(cost, priced=usage.priced)
 
 
 def build_root(service: MatchService) -> Callable[[], None]:

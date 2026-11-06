@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
 from nicegui import ui
+from pydantic_ai import prices
 
 from ludotastic.api import mount_api
 from ludotastic.service import MatchService
@@ -22,8 +23,15 @@ def create_app(service: MatchService | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
-        yield
-        service.close()
+        updater = (
+            prices.update_in_background() if service.settings.update_prices else None
+        )
+        try:
+            yield
+        finally:
+            if updater is not None:
+                updater.stop()
+            service.close()
 
     app = FastAPI(
         title="Ludotastic",

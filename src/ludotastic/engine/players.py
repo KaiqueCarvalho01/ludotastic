@@ -11,6 +11,7 @@ from typing import Any, override
 from pydantic import BaseModel
 
 from ludotastic.engine.game import Game
+from ludotastic.engine.usage import Usage
 
 __all__ = [
     "Decision",
@@ -60,7 +61,9 @@ class Decision:
     action: BaseModel
     """The chosen action."""
     details: dict[str, Any] = field(default_factory=dict)
-    """JSON-serializable details, such as the model, usage or confidence."""
+    """JSON-serializable details, such as the model or its confidence."""
+    usage: Usage | None = None
+    """What deciding cost, for players that use a model."""
 
 
 class Player(ABC):
