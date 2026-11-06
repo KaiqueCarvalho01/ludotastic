@@ -43,6 +43,7 @@ def render(ctx: RenderContext) -> None:
                 ui.button(
                     mark or "",
                     on_click=lambda _, cell=cell: ctx.submit(seat, Place(cell=cell)),
+                    color=None,
                 )
                 .props("flat bordered" + (" disable" if mark or not clickable else ""))
                 .classes("w-24 h-24 text-5xl font-bold rounded-lg")
