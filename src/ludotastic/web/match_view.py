@@ -64,7 +64,7 @@ def _move_row(game: Game[Any, Any], move: MoveRecord) -> None:
     title = f"{move.turn + 1}. {game.player_label(move.seat)}: {move.description}"
     confidence = move.details.get("confidence", {}).get("response")
     if not move.details and not move.forced:
-        ui.label(title).classes("w-full py-2 px-4 text-sm")
+        ui.label(title).classes("w-full py-1 px-4 text-sm")
         return
     with ui.expansion().classes("w-full").props("dense") as expansion:
         with (
@@ -146,7 +146,8 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
                             with ui.column().classes("gap-0 min-w-0 grow"):
                                 ui.label(seat.player).classes("break-all font-medium")
                                 ui.label(seat.kind).classes("text-xs text-gray-500")
-                            if seat.seat in match.thinking:
+                            # Bots answer instantly: a spinner would only flicker.
+                            if seat.seat in match.thinking and seat.kind != "bot":
                                 ui.spinner(size="sm")
                             if match.outcome:
                                 ui.label(
@@ -155,18 +156,33 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
 
                 seats()
 
-            with ui.card().classes("w-full"):
-                ui.label("Moves").classes("text-lg font-bold")
+            with ui.card().classes("w-full p-0"):
+                moves_card = (
+                    ui.expansion("Moves", icon="list", caption="0 moves")
+                    .classes("w-full")
+                    .props("header-class='text-lg font-bold'")
+                    .mark("moves")
+                )
+            shown = 0
 
-                @ui.refreshable
-                def history() -> None:
-                    if not match.history:
-                        ui.label("No moves yet.").classes("text-gray-500")
-                    with ui.column().classes("w-full gap-0"):
-                        for move in reversed(match.history[-50:]):
-                            _move_row(game, move)
+            @ui.refreshable
+            def history() -> None:
+                nonlocal shown
+                shown = len(match.history)
+                if not moves_card.value:
+                    return  # Only built while open: cheap during fast games.
+                if not match.history:
+                    ui.label("No moves yet.").classes("text-gray-500 px-4 pb-2")
+                    return
+                # A fixed-height scroll box, so the page does not grow as moves
+                # arrive.
+                with ui.scroll_area().classes("w-full h-96"):
+                    for move in reversed(match.history[-50:]):
+                        _move_row(game, move)
 
+            with moves_card:
                 history()
+            moves_card.on_value_change(history.refresh)
 
     def banner_text() -> str:
         if match.status is MatchStatus.ABORTED:
@@ -203,7 +219,10 @@ def match_view(match: Match) -> None:  # noqa: C901, PLR0915
         )
         board.refresh()
         seats.refresh()
-        history.refresh()
+        count = len(match.history)
+        moves_card.props(f"caption='{count} move{'' if count == 1 else 's'}'")
+        if moves_card.value and count != shown:
+            history.refresh()
 
     unsubscribe = match.subscribe(mark_dirty)
     update()

@@ -197,12 +197,37 @@ async def test_forced_moves_and_details(user: User, service: MatchService) -> No
             details={"mode": "choice", "forced": True},
         )
     )
+    match.history.append(
+        MoveRecord(turn=3, seat=1, action={"cell": 3}, description="Plain", seconds=1)
+    )
+    match.history.append(
+        MoveRecord(
+            turn=4,
+            seat=0,
+            action={"cell": 4},
+            description="Unsure",
+            seconds=1,
+            details={"model": "test"},
+        )
+    )
     await user.open(f"/match/{match.id}")
+    await user.should_see("...")
+    await user.should_not_see("1. X: Waited")  # Not built until opened.
+    moves = user.find(marker="moves").elements.pop()
+    assert isinstance(moves, ui.expansion)
+    assert moves.props["caption"] == "5 moves"
+    moves.open()
     await user.should_see("1. X: Waited")
     await user.should_see("2. O: Thought")
     await user.should_see("25%")
     await user.should_see("3. X: Only move")
-    await user.should_see("...")
+    await user.should_see("4. O: Plain")
+    await user.should_see("5. X: Unsure")
+    match.history.clear()
+    match.state = match.state  # Nothing new: an open list is left alone.
+    await match._notify()  # noqa: SLF001
+    await user.should_see("No moves yet.")
+    assert moves.props["caption"] == "0 moves"
 
 
 async def test_no_games_and_broken_plugins(
