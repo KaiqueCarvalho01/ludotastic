@@ -125,6 +125,7 @@ nav:
     - API Reference: api.md
   - Notes:
     - "Tic-Tac-Toe: board format for AI": notes/tictactoe-observation.md
+    - "Rock-Paper-Scissors: rules, AI and bot": notes/rock-paper-scissors.md
 
 extra:
   social:

@@ -14,6 +14,10 @@ This page provides detailed API documentation for Ludotastic.
 
 ::: ludotastic.storage
 
+## Rock-Paper-Scissors
+
+::: ludotastic.games.rock_paper_scissors
+
 ## Tic-Tac-Toe
 
 ::: ludotastic.games.tictactoe

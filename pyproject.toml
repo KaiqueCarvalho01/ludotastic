@@ -42,6 +42,7 @@ ludotastic = "ludotastic.cli:main"
 # The bundled games register here exactly like third-party ones.
 [project.entry-points."ludotastic.games"]
 2048 = "ludotastic.games.twentyfortyeight:TwentyFortyEight"
+rock-paper-scissors = "ludotastic.games.rock_paper_scissors:RockPaperScissors"
 snake = "ludotastic.games.snake:Snake"
 tictactoe = "ludotastic.games.tictactoe:TicTacToe"
 
