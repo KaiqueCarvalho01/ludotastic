@@ -81,10 +81,14 @@ always produce the same next state.
 
 The NiceGUI renderer shows:
 
-- a scoreboard with each player's wins and the current round;
-- a line describing the previous round, or `No rounds have been played yet.`;
-- one row of **Rock**, **Paper** and **Scissors** buttons for every human seat
-  that can act.
+- a header with the current round and the target number of wins;
+- two player cards, each with the player's name, score and previous throw;
+- a round banner naming who won the last round, with the full sentence below
+  it; before the first round the banner says `Ready to play` and
+  `No rounds have been played yet.`;
+- one row of **Rock**, **Paper** and **Scissors** buttons, each with an icon and
+  its own colour, for every human seat that can act;
+- a match-over banner naming the winner, or announcing a draw.
 
 Clicking a button submits `Throw(move=...)` for that seat and disables that
 seat's three buttons until the round finishes. With two human seats the page
@@ -233,6 +237,7 @@ the result at the end.
 - action descriptions, keys and parsing;
 - `CounterBot` on the first round and after an opponent throw;
 - a complete match against `RandomBot`;
-- the UI flow for two human seats and the seat-gating rule.
+- the UI flow for two human seats and the seat-gating rule;
+- the match-over banner for a win and for a draw.
 
 The game and UI modules are covered at 100% line and branch coverage.

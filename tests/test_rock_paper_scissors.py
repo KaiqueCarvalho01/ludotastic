@@ -224,3 +224,56 @@ async def test_renderer_skips_seats_that_cannot_act(
     await user.open(f"/match/{match.id}")
     await user.should_see("Player 2, choose:")
     await user.should_not_see("Player 1, choose:")
+
+
+@pytest.mark.parametrize(
+    ("last", "heading", "detail"),
+    [
+        ((Move.ROCK, Move.PAPER), "Player 2 wins the round!", "Player 2 won."),
+        ((Move.ROCK, Move.ROCK), "Tie round! Both played Rock.", "It was a tie."),
+    ],
+)
+async def test_round_banner_shows_the_result(
+    user: User,
+    service: MatchService,
+    last: tuple[Move, Move],
+    heading: str,
+    detail: str,
+) -> None:
+    match = service.create(
+        "rock-paper-scissors", [HumanSpec(), HumanSpec()], start=False
+    )
+    match.state = state(rounds=1, last=last)
+    await user.open(f"/match/{match.id}")
+    await user.should_see(heading)
+    await user.should_see(detail)
+
+
+async def test_match_over_banner_names_the_winner(
+    user: User, service: MatchService
+) -> None:
+    match = service.create(
+        "rock-paper-scissors", [HumanSpec(), HumanSpec()], start=False
+    )
+    match.state = state(
+        wins=(TARGET_WINS, 0),
+        rounds=TARGET_WINS,
+        last=(Move.ROCK, Move.SCISSORS),
+    )
+    await user.open(f"/match/{match.id}")
+    await user.should_see("Player 1 wins the match!")
+    await user.should_not_see("Player 1, choose:")
+
+
+async def test_match_over_banner_shows_a_draw(
+    user: User, service: MatchService
+) -> None:
+    match = service.create(
+        "rock-paper-scissors", [HumanSpec(), HumanSpec()], start=False
+    )
+    match.state = state(
+        rounds=MAX_ROUNDS,
+        last=(Move.ROCK, Move.PAPER),
+    )
+    await user.open(f"/match/{match.id}")
+    await user.should_see("Match over: it is a draw!")
