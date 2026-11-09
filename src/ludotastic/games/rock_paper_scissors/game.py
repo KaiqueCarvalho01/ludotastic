@@ -176,7 +176,7 @@ class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
                     2, seat, f"Player {seat + 1} reached {TARGET_WINS} wins"
                 )
         if state.rounds >= MAX_ROUNDS:
-            return _round_wins(
+            return _by_round_wins(
                 state,
                 f"Round limit reached, final score {state.wins[0]}-{state.wins[1]}",
             )
