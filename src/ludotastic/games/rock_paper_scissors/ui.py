@@ -16,18 +16,18 @@ from ludotastic.games.rock_paper_scissors.game import (
 
 LABELS: Final = ("Player 1", "Player 2")
 
-PLAYER_STYLES: Final = {
-    0: {
+PLAYER_STYLES: Final = (
+    {
         "name": "text-sky-700 dark:text-sky-300",
         "score": "text-sky-600 dark:text-sky-300",
         "card": "border-sky-200 bg-sky-50 dark:border-sky-800 dark:bg-sky-950",
     },
-    1: {
+    {
         "name": "text-rose-700 dark:text-rose-300",
         "score": "text-rose-600 dark:text-rose-300",
         "card": "border-rose-200 bg-rose-50 dark:border-rose-800 dark:bg-rose-950",
     },
-}
+)
 
 MOVE_STYLES: Final = {
     Move.ROCK: {
