@@ -127,9 +127,9 @@ def test_outcome_at_target_wins(winner: int) -> None:
 def test_outcome_at_the_round_cap() -> None:
     outcome = GAME.outcome(state(wins=(2, 1), rounds=MAX_ROUNDS))
     assert outcome is not None
-    assert outcome.scores == (2.0, 1.0)
+    assert outcome.scores == (1.0, 0.0)
     assert outcome.winners == (0,)
-    assert "Round limit reached" in outcome.reason
+    assert outcome.reason == "Round limit reached, final score 2-1"
 
 
 def test_out_of_turns_keeps_the_round_wins() -> None:
