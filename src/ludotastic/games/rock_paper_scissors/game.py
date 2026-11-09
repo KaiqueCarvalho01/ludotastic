@@ -156,11 +156,9 @@ class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
         """Score the round from both throws."""
         del rng
         first, second = actions[0].move, actions[1].move
-        wins_1, wins_2 = state.wins
-        if first.beats is second:
-            wins_1 += 1
-        elif second.beats is first:
-            wins_2 += 1
+        wins = list(state.wins)
+        if (winner := round_winner(first, second)) is not None:
+            wins[winner] += 1
         return RockPaperScissorsState(
             wins=(wins_1, wins_2),
             rounds=state.rounds + 1,
