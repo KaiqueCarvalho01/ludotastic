@@ -17,8 +17,8 @@ Two players throw at the same time. Each round is one of:
 
 - A round win scores one point; a tie scores nothing.
 - The first player to **3** round wins takes the match.
-- If **20** rounds pass without a winner, the match ends with the round wins as
-  the final score.
+- If **20** rounds pass without a winner, the player with more round wins takes
+  the match; equal round wins are a draw.
 - The game is always played by exactly two seats, both acting in every round.
 
 The constants are `TARGET_WINS` and `MAX_ROUNDS` in the game module.
