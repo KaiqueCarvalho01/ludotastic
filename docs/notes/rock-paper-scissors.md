@@ -187,8 +187,6 @@ the bot plays rock.
 The code uses `Move.loses_to` for this. `Move.beats` is the move that a throw
 defeats, so using `beats` here would make the bot play the throw that **loses**
 to the opponent's last move.
-### Example match
-
 With `seed=1`, `CounterBot` against the engine's `RandomBot` plays out like
 this:
 

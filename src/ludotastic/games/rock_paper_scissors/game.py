@@ -74,6 +74,24 @@ _BEATS: Final = {
 }
 
 
+def _round_winner(first: Move, second: Move) -> int | None:
+    """Return the winning seat (0 or 1) or None for a tie."""
+    if first.beats is second:
+        return 0
+    elif second.beats is first:
+        return 1
+    else:
+        return None
+
+
+def _by_round_wins(state: RockPaperScissorsState, reason: str) -> Outcome:
+    """Win for whoever has more round wins, or a draw when level."""
+    first, second = state.wins
+    if first == second:
+        return Outcome.draw(2, reason)
+    return Outcome.win(2, 0 if first > second else 1, reason)
+
+
 class Throw(BaseModel):
     """Throw one of the three moves."""
 
@@ -94,14 +112,6 @@ class RockPaperScissorsState(BaseModel):
     """Rounds played so far."""
     last: tuple[Move | None, Move | None] = (None, None)
     """The last round's throws, or `None` before the first round."""
-
-
-def _by_round_wins(state: RockPaperScissorsState, reason: str) -> Outcome:
-    """Win for whoever has more round wins, or a draw when level."""
-    first, second = state.wins
-    if first == second:
-        return Outcome.draw(2, reason)
-    return Outcome.win(2, 0 if first > second else 1, reason)
 
 
 class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
@@ -157,10 +167,11 @@ class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
         del rng
         first, second = actions[0].move, actions[1].move
         wins = list(state.wins)
-        if (winner := round_winner(first, second)) is not None:
+        winner = _round_winner(first, second)
+        if winner is not None:
             wins[winner] += 1
         return RockPaperScissorsState(
-            wins=(wins_1, wins_2),
+            wins=tuple(wins),
             rounds=state.rounds + 1,
             last=(first, second),
         )
