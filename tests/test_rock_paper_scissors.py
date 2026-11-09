@@ -173,7 +173,7 @@ def test_descriptions_and_keys() -> None:
 
 async def test_counter_bot_throws_at_random_first() -> None:
     decision = await CounterBot().act(ctx(state(), 0))
-    assert decision.action in THROWS
+    assert decision.action == Throw(move=Move.PAPER)
 
 
 async def test_counter_bot_beats_the_last_throw() -> None:
