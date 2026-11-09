@@ -104,7 +104,7 @@ def _player_card(state: RockPaperScissorsState, seat: int) -> None:
         f"{style['card']}"
     ):
         ui.label(LABELS[seat]).classes(f"text-xl font-bold {style['name']}")
-        ui.label(f"{LABELS[seat]}: {state.wins[seat]}").classes(
+        ui.label(str(state.wins[seat])).classes(
             f"text-4xl font-mono font-black {style['score']}"
         ).mark(f"wins-{seat}")
         if last is None:
