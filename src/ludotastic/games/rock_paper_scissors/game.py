@@ -96,12 +96,12 @@ class RockPaperScissorsState(BaseModel):
     """The last round's throws, or `None` before the first round."""
 
 
-def _round_wins(state: RockPaperScissorsState, reason: str) -> Outcome:
-    """Score a match by the round wins earned so far."""
-    return Outcome(
-        scores=(float(state.wins[0]), float(state.wins[1])),
-        reason=reason,
-    )
+def _by_round_wins(state: RockPaperScissorsState, reason: str) -> Outcome:
+    """Win for whoever has more round wins, or a draw when level."""
+    first, second = state.wins
+    if first == second:
+        return Outcome.draw(2, reason)
+    return Outcome.win(2, 0 if first > second else 1, reason)
 
 
 class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
