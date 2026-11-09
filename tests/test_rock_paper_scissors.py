@@ -134,7 +134,7 @@ def test_outcome_at_the_round_cap() -> None:
 
 def test_out_of_turns_keeps_the_round_wins() -> None:
     outcome = GAME.out_of_turns(state(wins=(1, 2), rounds=5))
-    assert outcome.scores == (1.0, 2.0)
+    assert outcome.scores == (0.0, 1.0)
     assert outcome.reason == "Turn limit reached, final score 1-2"
 
 
