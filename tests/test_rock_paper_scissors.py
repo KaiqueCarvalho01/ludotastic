@@ -200,6 +200,16 @@ async def test_counter_against_random_matches_the_docs() -> None:
     ]
 
 
+async def test_counter_against_random_matches_the_docs() -> None:
+    match = Match(RockPaperScissors(), [CounterBot(), RandomBot()], seed=1)
+    outcome = await match.run()
+    assert outcome is not None
+    assert outcome.reason == "Player 1 reached 3 wins"
+    assert [move.action["move"] for move in match.history] == [
+        "rock", "rock", "paper", "rock", "paper", "rock", "paper", "rock",
+    ]
+
+
 async def test_play_hot_seat(user: User, service: MatchService) -> None:
     match = service.create("rock-paper-scissors", [HumanSpec(), HumanSpec()])
     await user.open(f"/match/{match.id}")

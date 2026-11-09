@@ -186,12 +186,7 @@ the bot plays rock.
 
 The code uses `Move.loses_to` for this. `Move.beats` is the move that a throw
 defeats, so using `beats` here would make the bot play the throw that **loses**
-to the opponent's last move. The plan text used `beats`, but the shipped bot
-uses `loses_to` so that it actually counters.
-
-The bot has no other memory: everything it knows is in `state.last`. If the
-opponent changes strategy, the bot only reacts one round later.
-
+to the opponent's last move.
 ### Example match
 
 With `seed=1`, `CounterBot` against the engine's `RandomBot` plays out like
