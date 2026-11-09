@@ -184,8 +184,8 @@ class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
 
     @override
     def out_of_turns(self, state: RockPaperScissorsState) -> Outcome:
-        """Keep the round wins as the score."""
-        return _round_wins(
+        """Whoever has more round wins takes the match; level is a draw."""
+        return _by_round_wins(
             state,
             f"Turn limit reached, final score {state.wins[0]}-{state.wins[1]}",
         )
