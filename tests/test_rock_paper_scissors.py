@@ -2,7 +2,6 @@
 
 __all__: tuple[str, ...] = ()
 
-import asyncio
 import random
 from typing import Final
 
@@ -196,17 +195,14 @@ async def test_counter_against_random_matches_the_docs() -> None:
     assert outcome is not None
     assert outcome.reason == "Player 1 reached 3 wins"
     assert [move.action["move"] for move in match.history] == [
-        "rock", "rock", "paper", "rock", "paper", "rock", "paper", "rock",
-    ]
-
-
-async def test_counter_against_random_matches_the_docs() -> None:
-    match = Match(RockPaperScissors(), [CounterBot(), RandomBot()], seed=1)
-    outcome = await match.run()
-    assert outcome is not None
-    assert outcome.reason == "Player 1 reached 3 wins"
-    assert [move.action["move"] for move in match.history] == [
-        "rock", "rock", "paper", "rock", "paper", "rock", "paper", "rock",
+        "rock",
+        "rock",
+        "paper",
+        "rock",
+        "paper",
+        "rock",
+        "paper",
+        "rock",
     ]
 
 
@@ -219,19 +215,17 @@ async def test_play_hot_seat(user: User, service: MatchService) -> None:
     await user.should_see("Round 1")
     user.find(marker="move-0-rock").click()
     user.find(marker="move-1-scissors").click()
-    for _ in range(100):
-        if isinstance(match.state, RockPaperScissorsState) and match.state.rounds:
-            break
-        await asyncio.sleep(0.01)
+    await user.should_see(
+        "Last round: Player 1 played rock; Player 2 played scissors. Player 1 won.",
+        retries=20,
+    )
+    await user.should_see("Round 2")
+    await user.should_see(marker="wins-0", content="1")
+    await user.should_see(marker="wins-1", content="0")
     s = match.state
     assert isinstance(s, RockPaperScissorsState)
     assert s.wins == (1, 0)
     assert s.last == (Move.ROCK, Move.SCISSORS)
-    await user.should_see(
-        "Last round: Player 1 played rock; Player 2 played scissors. Player 1 won."
-    )
-    await user.should_see("Round 2")
-    await user.should_see("Player 1: 1")
 
 
 async def test_renderer_skips_seats_that_cannot_act(

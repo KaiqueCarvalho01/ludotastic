@@ -8,6 +8,7 @@ __all__: tuple[str, ...] = (
     "RockPaperScissors",
     "RockPaperScissorsState",
     "Throw",
+    "round_winner",
 )
 
 import random
@@ -74,14 +75,22 @@ _BEATS: Final = {
 }
 
 
-def _round_winner(first: Move, second: Move) -> int | None:
-    """Return the winning seat (0 or 1) or None for a tie."""
+def round_winner(first: Move, second: Move) -> Seat | None:
+    """The seat whose throw won the round, or `None` on a tie.
+
+    Examples:
+        >>> round_winner(Move.ROCK, Move.SCISSORS)
+        0
+        >>> round_winner(Move.ROCK, Move.PAPER)
+        1
+        >>> round_winner(Move.ROCK, Move.ROCK) is None
+        True
+    """
     if first.beats is second:
         return 0
-    elif second.beats is first:
+    if second.beats is first:
         return 1
-    else:
-        return None
+    return None
 
 
 def _by_round_wins(state: RockPaperScissorsState, reason: str) -> Outcome:
@@ -166,12 +175,14 @@ class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
         """Score the round from both throws."""
         del rng
         first, second = actions[0].move, actions[1].move
-        wins = list(state.wins)
-        winner = _round_winner(first, second)
-        if winner is not None:
-            wins[winner] += 1
+        wins_1, wins_2 = state.wins
+        match round_winner(first, second):
+            case 0:
+                wins_1 += 1
+            case 1:
+                wins_2 += 1
         return RockPaperScissorsState(
-            wins=tuple(wins),
+            wins=(wins_1, wins_2),
             rounds=state.rounds + 1,
             last=(first, second),
         )
@@ -215,12 +226,13 @@ class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
         if own is None or theirs is None:
             parts.append("No rounds have been played yet.")
         else:
-            if own.beats is theirs:
-                result = "you won"
-            elif theirs.beats is own:
-                result = "you lost"
-            else:
-                result = "you tied"
+            match round_winner(own, theirs):
+                case 0:
+                    result = "you won"
+                case 1:
+                    result = "you lost"
+                case _:
+                    result = "you tied"
             parts.append(
                 f"Last round: you played {own}; your opponent played {theirs}; "
                 f"{result}."

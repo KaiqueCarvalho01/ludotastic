@@ -72,7 +72,8 @@ needed:
    ends the match when a seat reaches 3 wins, or when the round cap is reached.
 5. If a match runs out of engine turns first,
    [`out_of_turns`][ludotastic.games.rock_paper_scissors.RockPaperScissors.out_of_turns]
-   keeps the round wins as the score.
+   gives the match to the player with more round wins, or a draw when they
+   are level.
 
 A round is a pure state transition: the same seed and the same pair of actions
 always produce the same next state.
@@ -187,6 +188,12 @@ the bot plays rock.
 The code uses `Move.loses_to` for this. `Move.beats` is the move that a throw
 defeats, so using `beats` here would make the bot play the throw that **loses**
 to the opponent's last move.
+
+The bot has no other memory: everything it knows is in `state.last`. If the
+opponent changes strategy, the bot only reacts one round later.
+
+### Example match
+
 With `seed=1`, `CounterBot` against the engine's `RandomBot` plays out like
 this:
 
