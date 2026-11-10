@@ -140,7 +140,8 @@ class RockPaperScissors(Game[RockPaperScissorsState, Throw]):
         "Rock beats scissors, scissors beats paper and paper beats rock. A round "
         "is a tie when both players throw the same move. The first player to "
         f"{TARGET_WINS} round wins takes the match. If {MAX_ROUNDS} rounds pass "
-        "without a winner, the match ends with the round wins as the score."
+        "without a winner, the player with more round wins takes the match; "
+        "equal round wins are a draw."
     )
     state_type = RockPaperScissorsState
     action_type = Throw

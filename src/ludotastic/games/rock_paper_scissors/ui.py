@@ -53,9 +53,18 @@ MOVE_STYLES: Final = {
 }
 
 ROUND_STYLES: Final = {
-    "win": "bg-green-100 text-green-800 border-green-300",
-    "tie": "bg-amber-100 text-amber-800 border-amber-300",
-    "ready": "bg-slate-100 text-slate-700 border-slate-300",
+    "win": (
+        "bg-green-100 text-green-800 border-green-300 "
+        "dark:bg-green-950 dark:text-green-200 dark:border-green-800"
+    ),
+    "tie": (
+        "bg-amber-100 text-amber-800 border-amber-300 "
+        "dark:bg-amber-950 dark:text-amber-200 dark:border-amber-800"
+    ),
+    "ready": (
+        "bg-slate-100 text-slate-700 border-slate-300 "
+        "dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600"
+    ),
 }
 
 
@@ -181,7 +190,8 @@ def _match_over_banner(game: RockPaperScissors, state: RockPaperScissorsState) -
         text = "Match over: it is a draw!"
     ui.label(text).classes(
         "w-full text-center text-2xl font-black bg-purple-100 text-purple-800 "
-        "border-2 border-purple-300 rounded-xl px-4 py-3"
+        "border-2 border-purple-300 rounded-xl px-4 py-3 "
+        "dark:bg-purple-950 dark:text-purple-200 dark:border-purple-800"
     ).mark("match-over")
 
 
